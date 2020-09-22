@@ -4,7 +4,7 @@ using System.Text;
 
 namespace discordbot.Services.DTOs
 {
-    public class Livestream
+    public class VideoDto
     {
         public string VideoId { get; set; }
         public DateTime StartTime { get; set; }

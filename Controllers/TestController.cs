@@ -21,7 +21,7 @@ namespace discordbot.Controllers
         }
 
         [HttpGet("{videoId}")]
-        public IEnumerable<Tag> Get(string videoId)
+        public IEnumerable<TimeStampDto> Get(string videoId)
         {
             return tagService.ListTag(videoId);
         }

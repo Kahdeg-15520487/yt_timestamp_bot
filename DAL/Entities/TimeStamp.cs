@@ -19,7 +19,7 @@ namespace discordbot.DAL.Entities
 
         public TimeStamp() { }
 
-        public TimeStamp(Tag tag)
+        public TimeStamp(TimeStampDto tag)
         {
             TagContent = tag.TagContent;
             VideoId = tag.VideoId;
@@ -29,10 +29,20 @@ namespace discordbot.DAL.Entities
             UserName = tag.UserName;
         }
 
+        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, ulong userId, string userName)
+        {
+            this.TagContent = tagContent;
+            this.VideoId = videoId;
+            this.UserId = userId;
+            this.UserName = userName;
+            ActualTime = DateTime.UtcNow;
+            Time = (DateTime.UtcNow - videoStartTime).TotalSeconds;
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("{0} : {1} at https://youtube.com/watch?v={2}", Time, TagContent, VideoId);
+            sb.AppendFormat("{0} : {1} at {2}", Time, TagContent, Utility.GetYoutubeUrl(VideoId));
             return sb.ToString();
         }
     }

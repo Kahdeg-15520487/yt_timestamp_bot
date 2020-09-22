@@ -5,6 +5,9 @@ using discordbot.Services.Interfaces;
 
 using Google.Apis.Logging;
 using Google.Apis.YouTube.v3;
+
+using LiteDB;
+
 using Microsoft.Extensions.Logging;
 
 using System;
@@ -22,8 +25,9 @@ namespace discordbot.Services
         private readonly ILogger<TagService> logger;
         private readonly YoutubeInterface ytInterface;
 
-        private static Livestream currentLiveStream;
-        public Livestream CurrentLiveStream { get => currentLiveStream; }
+        private static VideoDto currentLiveStream;
+        public VideoDto CurrentLiveStream { get => currentLiveStream; }
+        public bool IsLive { get => currentLiveStream != null; }
 
         public TagService(ITimeStampRepository tsDb, ILogger<TagService> logger, YoutubeInterface ytInterface)
         {
@@ -32,11 +36,28 @@ namespace discordbot.Services
             this.ytInterface = ytInterface;
         }
 
-        public async Task StartTag()
+        public async Task<bool> StartTag()
         {
+            //todo replace with a mechanism of auto stream grabbing
             YouTubeService ytService = ytInterface.GetYoutubeService();
-            string livestreamId = await ytInterface.GetLiveStream(ytService, "upcoming");
-            currentLiveStream = ytInterface.GetLiveStreamInfo(livestreamId).Result;
+            try
+            {
+                string livestreamId = await ytInterface.GetLiveStream(ytService, "Upcoming");
+                if (livestreamId == null)
+                {
+                    logger.LogInformation("null");
+                    livestreamId = await ytInterface.GetLiveStream(ytService, "Live");
+                }
+                currentLiveStream = ytInterface.GetVideoInfo(ytService, livestreamId).Result;
+                logger.LogInformation($"starting tagging for {livestreamId}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, nameof(StartTag));
+                logger.LogInformation("found no upcoming stream");
+                return false;
+            }
         }
 
         public void EndTag()
@@ -44,42 +65,43 @@ namespace discordbot.Services
             currentLiveStream = null;
         }
 
-        public Tag GetTag(string tag)
+        public TimeStampDto GetTag(string tag)
         {
             if (currentLiveStream != null)
             {
                 TimeStamp timestamp = db.Query(ts => ts.TagContent.Equals(tag)).FirstOrDefault();
-                return new Tag(timestamp);
+                return new TimeStampDto(timestamp);
             }
             return null;
         }
 
-        public IEnumerable<Tag> ListTag()
+        public IEnumerable<TimeStampDto> ListTag()
         {
             if (currentLiveStream != null)
             {
                 return db.Query(ts => ts.VideoId.Equals(currentLiveStream.VideoId))
                          .OrderBy(ts => ts.Time)
-                         .Select(ts => new Tag(ts));
+                         .Select(ts => new TimeStampDto(ts));
             }
             return null;
         }
 
-        public IEnumerable<Tag> ListTag(string videoId)
+        public IEnumerable<TimeStampDto> ListTag(string videoId)
         {
-            var querry = db.Query(ts => ts.VideoId.Equals(videoId))
+            IEnumerable<TimeStampDto> querry = db.Query(ts => ts.VideoId.Equals(videoId))
                            .OrderBy(ts => ts.Time)
-                           .Select(ts => new Tag(ts));
+                           .Select(ts => new TimeStampDto(ts));
             return querry.ToList();
         }
 
-        public Tag AddTag(string tagContent, ulong userId, string userName)
+        public TimeStampDto AddTag(string tagContent, ulong userId, string userName)
         {
             if (currentLiveStream != null)
             {
-                Tag tag = Tag.Create(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, userId, userName);
-                db.Save(new TimeStamp(tag));
-                return tag;
+                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, userId, userName);
+                ObjectId id = db.Save(ts);
+                ts.Id = id;
+                return new TimeStampDto(ts);
             }
             return null;
         }
@@ -89,14 +111,14 @@ namespace discordbot.Services
             throw new NotImplementedException();
         }
 
-        public Tag EditTag(ulong userId, string tagContent)
+        public TimeStampDto EditTag(ulong userId, string tagContent)
         {
             if (currentLiveStream != null)
             {
                 TimeStamp timeStamp = db.Query(ts => ts.UserId == userId)
                               .OrderBy(ts => ts.Time)
                               .FirstOrDefault();
-                var oldtag = new Tag(timeStamp);
+                TimeStampDto oldtag = new TimeStampDto(timeStamp);
                 if (timeStamp == null)
                 {
                     return null;
@@ -111,6 +133,11 @@ namespace discordbot.Services
 
         public DateTime RecalculateTag(DateTime dt, string videoId = null)
         {
+            if (true)
+            {
+                //todo ensure videoId exist
+            }
+
             IEnumerable<TimeStamp> timeStamps = videoId == null ?
                 db.Query(ts => ts.VideoId.Equals(currentLiveStream.VideoId))
                 :

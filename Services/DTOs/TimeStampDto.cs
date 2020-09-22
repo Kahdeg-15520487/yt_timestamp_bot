@@ -6,8 +6,9 @@ using System.Text;
 
 namespace discordbot.Services.DTOs
 {
-    public class Tag
+    public class TimeStampDto
     {
+        public string Id { get; set; }
         public string TagContent { get; set; }
         public DateTime ActualTime { get; set; }
         public double Time { get; set; }
@@ -15,29 +16,17 @@ namespace discordbot.Services.DTOs
         public ulong UserId { get; private set; }
         public string UserName { get; private set; }
 
-        public Tag() { }
+        public TimeStampDto() { }
 
-        internal Tag(TimeStamp timestamp)
+        internal TimeStampDto(TimeStamp timestamp)
         {
+            Id = timestamp.Id.ToString();
             TagContent = timestamp.TagContent;
             ActualTime = timestamp.ActualTime;
             VideoId = timestamp.VideoId;
             Time = timestamp.Time;
             UserId = timestamp.UserId;
             UserName = timestamp.UserName;
-        }
-
-        internal static Tag Create(string tagContent, string videoId, DateTime videoStartTime, ulong userId, string userName)
-        {
-            return new Tag()
-            {
-                TagContent = tagContent,
-                ActualTime = DateTime.UtcNow,
-                Time = (DateTime.UtcNow - videoStartTime).TotalSeconds,
-                VideoId = videoId,
-                UserId = userId,
-                UserName = userName
-            };
         }
 
         public override string ToString()

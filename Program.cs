@@ -1,6 +1,9 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
+
 using discordbot;
+using discordbot.BackgroundServices;
+using discordbot.DAL.Entities;
 using discordbot.DAL.Implementations;
 using discordbot.DAL.Interfaces;
 using discordbot.Services;
@@ -9,6 +12,7 @@ using discordbot.Services.Interfaces;
 using DiscordBot.BackgroundServices;
 
 using LiteDB;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -86,7 +90,6 @@ namespace DiscordBot
 
         private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
         {
-
             configuration = LoadConfiguration();
 
             services.AddSingleton<IConfiguration>(configuration)
@@ -99,9 +102,12 @@ namespace DiscordBot
                     .AddTransient(typeof(IBaseRepository<>), typeof(BaseRepository<>))
                     .AddTransient<ITimeStampRepository, TimestampRepository>()
                     .AddTransient<ITagService, TagService>()
+                    .AddTransient<IVideoRepository, VideoRepository>()
                     .AddTransient<YoutubeInterface>()
 
+                    .AddSingleton(typeof(IBackgroundTaskQueue<>), typeof(BackgroundTaskQueue<>))
                     .AddHostedService<DiscordHandlerHostedService>()
+                    .AddHostedService<KonluluStreamGrabHostedService>()
                     ;
 
             StringBuilder sb = new StringBuilder();
@@ -110,6 +116,16 @@ namespace DiscordBot
             {
                 sb.AppendLine($"Service: {service.ServiceType.FullName}\n      Lifetime: {service.Lifetime}\n      Instance: {service.ImplementationType?.FullName}");
             }
+
+            ConfigureDatabase();
+        }
+
+        private static void ConfigureDatabase()
+        {
+            BsonMapper mapper = BsonMapper.Global;
+
+            mapper.Entity<Video>()
+                  .Id(x => x.VideoId);
         }
     }
 }

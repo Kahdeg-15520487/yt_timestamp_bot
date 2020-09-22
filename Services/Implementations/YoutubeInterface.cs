@@ -15,25 +15,29 @@ using System.Threading;
 using Google.Apis.Util.Store;
 using Newtonsoft.Json;
 using Microsoft.VisualBasic;
+using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace discordbot.Services
 {
     class YoutubeInterface
     {
         private readonly string ApiKey;
+        private readonly ILogger<YoutubeInterface> logger;
 
-        public YoutubeInterface(IConfiguration configuration)
+        public YoutubeInterface(IConfiguration configuration, ILogger<YoutubeInterface> logger)
         {
-            ApiKey = JsonConvert.SerializeObject(new { Secrets = new[] { configuration["_APIKEY"] } });
+            ApiKey = configuration["_APIKEY"];
+            this.logger = logger;
         }
 
         [Obsolete("use for oauth")]
         private async Task<UserCredential> Login()
         {
-            using (var stream = new FileStream("secret.json", FileMode.Open, FileAccess.Read))
+            using (FileStream stream = new FileStream("secret.json", FileMode.Open, FileAccess.Read))
             {
 
-                var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                     GoogleClientSecrets.Load(stream).Secrets,
                     new[] { YouTubeService.Scope.Youtube },
                     "user",
@@ -52,7 +56,7 @@ namespace discordbot.Services
             });
         }
 
-        private async Task<Livestream> GetCurrentLiveStream()
+        private async Task<VideoDto> GetCurrentLiveStream()
         {
             YouTubeService t = new YouTubeService(new Google.Apis.Services.BaseClientService.Initializer()
             {
@@ -68,14 +72,14 @@ namespace discordbot.Services
             request.Fields = "items(id(videoId))";
             SearchListResponse result = await request.ExecuteAsync();
             SearchResult livestream = result.Items.FirstOrDefault();
-            return new Livestream()
+            return new VideoDto()
             {
                 VideoId = livestream?.Id.VideoId,
                 StartTime = TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(livestream.Snippet.PublishedAt))
             };
         }
 
-        private async Task<Livestream> GetUpcomingLiveStream()
+        private async Task<VideoDto> GetUpcomingLiveStream()
         {
             YouTubeService t = new YouTubeService(new Google.Apis.Services.BaseClientService.Initializer()
             {
@@ -91,7 +95,7 @@ namespace discordbot.Services
             request.Fields = "items(id(videoId))";
             SearchListResponse result = await request.ExecuteAsync();
             SearchResult livestream = result.Items.FirstOrDefault();
-            return new Livestream()
+            return new VideoDto()
             {
                 VideoId = livestream?.Id.VideoId,
                 StartTime = TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(livestream.Snippet.PublishedAt))
@@ -100,37 +104,47 @@ namespace discordbot.Services
 
         internal async Task<string> GetLiveStream(YouTubeService ytService, string eventType)
         {
-            SearchResource.ListRequest request = ytService.Search.List("id");
-            request.ChannelId = "UC_a1ZYZ8ZTXpjg9xUY9sj8w";
-            request.EventType = eventType.ToEnum<SearchResource.ListRequest.EventTypeEnum>();
-            request.MaxResults = 1;
-            request.Type = "video";
-            request.Fields = "items(id(videoId))";
-            SearchListResponse result = await request.ExecuteAsync();
-            SearchResult livestream = result.Items.FirstOrDefault();
-            return livestream?.Id.VideoId;
+            try
+            {
+                SearchResource.ListRequest request = ytService.Search.List("id");
+                request.ChannelId = "UC_a1ZYZ8ZTXpjg9xUY9sj8w";
+                request.EventType = eventType.ToEnum<SearchResource.ListRequest.EventTypeEnum>();
+                request.MaxResults = 1;
+                request.Type = "video";
+                request.Fields = "items(id(videoId))";
+                SearchListResponse result = await request.ExecuteAsync();
+                SearchResult livestream = result.Items.FirstOrDefault();
+                return livestream?.Id.VideoId;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, nameof(GetLiveStream));
+                return null;
+            }
         }
 
-        internal async Task<Livestream> GetLiveStreamInfo(string videoId)
+        internal async Task<VideoDto> GetVideoInfo(YouTubeService ytService, string videoId)
         {
-            YouTubeService t = new YouTubeService(new Google.Apis.Services.BaseClientService.Initializer()
+            try
             {
-                ApiKey = ApiKey,
-                ApplicationName = "TimeStampBot"
-            });
-
-            VideosResource.ListRequest request = t.Videos.List("id,snippet");
-            request.Id = videoId;
-            request.Fields = "items(id,liveStreamingDetails(activeLiveChatId,concurrentViewers,scheduledStartTime,actualStartTime)," +
-                             "snippet(channelId,channelTitle,description,liveBroadcastContent,publishedAt,thumbnails,title),statistics)";
-            VideoListResponse result = await request.ExecuteAsync();
-            Video livestream = result.Items.FirstOrDefault();
-            return new Livestream()
+                VideosResource.ListRequest request = ytService.Videos.List("snippet,id,liveStreamingDetails");
+                request.Id = videoId;
+                request.Fields = "items(id,liveStreamingDetails(activeLiveChatId,concurrentViewers,scheduledStartTime,actualStartTime)," +
+                                 "snippet(channelId,channelTitle,description,liveBroadcastContent,publishedAt,thumbnails,title),statistics)";
+                VideoListResponse result = await request.ExecuteAsync();
+                Video livestream = result.Items.FirstOrDefault();
+                return new VideoDto()
+                {
+                    VideoId = livestream?.Id,
+                    StartTime = DateTime.Parse(livestream.LiveStreamingDetails.ActualStartTime, styles: DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal),
+                    EndTime = DateTime.Parse(livestream.LiveStreamingDetails.ActualEndTime ?? DateTime.UtcNow.ToLongTimeString(), styles: DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal)
+                };
+            }
+            catch (Exception ex)
             {
-                VideoId = livestream?.Id,
-                StartTime = DateTime.Parse(livestream.LiveStreamingDetails.ActualStartTime),
-                EndTime = DateTime.Parse(livestream.LiveStreamingDetails.ActualEndTime)
-            };
+                logger.LogError(ex, nameof(GetVideoInfo));
+                return null;
+            }
         }
 
         //internal async Task<Livestream> GetVideo(string videoId)

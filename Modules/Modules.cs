@@ -4,6 +4,7 @@ using Discord.WebSocket;
 
 using discordbot;
 using discordbot.Services;
+using discordbot.Services.DTOs;
 using discordbot.Services.Interfaces;
 
 using Microsoft.Extensions.Logging;
@@ -47,16 +48,19 @@ namespace DiscordBot.Modules
 
         [Command("help")]
         [Summary("Get help")]
-        public Task PrintHelpAsync()
+        public async Task PrintHelpAsync()
         {
-            return base.ReplyAsync(DiscordModule.HELP_STRING);
+            await base.ReplyAsync(DiscordModule.HELP_STRING);
         }
 
         [Command("start")]
         [Summary("start recording tag")]
         public async Task StartTag()
         {
-            await tagService.StartTag();
+            if (!await tagService.StartTag())
+            {
+                await base.ReplyAsync("Found no stream");
+            }
         }
 
         [Command("t")]
@@ -65,26 +69,33 @@ namespace DiscordBot.Modules
         {
             tagService.AddTag(tag, Context.User.Id, Context.User.Username);
             logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag}");
-            //discordbot.Services.DTOs.Livestream tt = await ytService.GetStartTime(videoId);
-            //await base.ReplyAsync(tt.ToString());
         }
 
         [Command("r")]
         [Summary("Recalculate time stamp with a new time(in UTC)\n\t\t\tex: r hh:mm:ss")]
         public async Task CallibrateTag([Summary("new time")] string newTime)
         {
-            DateTime dt = DateTime.Parse(newTime);
-            DateTime oldDt = tagService.RecalculateTag(dt);
-            await base.ReplyAsync($"recalculate time stamp from {oldDt.ToLongTimeString()} to {dt.ToLongTimeString()}");
+            if (!tagService.IsLive)
+            {
+                return;
+            }
+            await this.CallibrateTag(newTime, tagService.CurrentLiveStream.VideoId);
         }
 
         [Command("r")]
         [Summary("Recalculate time stamp with a new time(in UTC) with videoId\n\t\t\tex: r hh:mm:ss videoId")]
         public async Task CallibrateTag([Summary("new time")] string newTime, [Summary("videoId")] string videoId)
         {
-            DateTime dt = DateTime.Parse(newTime);
-            DateTime oldDt = tagService.RecalculateTag(dt, videoId);
-            await base.ReplyAsync($"recalculate time stamp from {oldDt.ToLongTimeString()} to {dt.ToLongTimeString()}");
+            try
+            {
+                DateTime dt = DateTime.Parse(newTime);
+                DateTime oldDt = tagService.RecalculateTag(dt, videoId);
+                await base.ReplyAsync($"recalculate time stamp from {oldDt.ToLongTimeString()} to {dt.ToLongTimeString()} for video {Utility.GetYoutubeUrl(videoId)}");
+            }
+            catch(FormatException formatEx)
+            {
+                await base.ReplyAsync("Wrong time format");
+            }
         }
 
         [Command("list")]
@@ -95,41 +106,8 @@ namespace DiscordBot.Modules
             {
                 return;
             }
-            List<string> tagSegments = new List<string>();
-            StringBuilder sb = new StringBuilder();
-            foreach (var t in tagService.ListTag())
-            {
-                sb.AppendFormat("[{0}]({1}) : {2} by {3}", Utility.ToTimeStamp(t.Time), Utility.GetYoutubeUrlWithTime(t.VideoId, t.Time), t.TagContent, t.UserName);
-                sb.AppendLine();
 
-                if (sb.Length >= 800)
-                {
-                    tagSegments.Add(sb.ToString());
-                    sb.Clear();
-                }
-            }
-
-            if (sb.Length >= 0)
-            {
-                tagSegments.Add(sb.ToString());
-            }
-
-            bool isFirst = true;
-            foreach (var segment in tagSegments)
-            {
-                var embed = new EmbedBuilder();
-
-                if (isFirst)
-                {
-                    isFirst = false;
-                    embed.Title = "Tags list";
-                    embed.Description = Utility.GetYoutubeUrl(tagService.CurrentLiveStream.VideoId);
-                }
-
-                embed.AddField("tags:", segment)
-                     .WithCurrentTimestamp();
-                await base.ReplyAsync(embed: embed.Build());
-            }
+            await this.ListTag(tagService.CurrentLiveStream.VideoId);
         }
 
         [Command("list")]
@@ -138,7 +116,7 @@ namespace DiscordBot.Modules
         {
             List<string> tagSegments = new List<string>();
             StringBuilder sb = new StringBuilder();
-            foreach (var t in tagService.ListTag(videoId))
+            foreach (TimeStampDto t in tagService.ListTag(videoId))
             {
                 sb.AppendFormat("[{0}]({1}) : {2} by {3}", Utility.ToTimeStamp(t.Time), Utility.GetYoutubeUrlWithTime(t.VideoId, t.Time), t.TagContent, t.UserName);
                 sb.AppendLine();
@@ -156,9 +134,9 @@ namespace DiscordBot.Modules
             }
 
             bool isFirst = true;
-            foreach (var segment in tagSegments)
+            foreach (string segment in tagSegments)
             {
-                var embed = new EmbedBuilder();
+                EmbedBuilder embed = new EmbedBuilder();
 
                 if (isFirst)
                 {
@@ -177,7 +155,7 @@ namespace DiscordBot.Modules
         [Summary("edit previous tag")]
         public async Task EditTag([Summary("tag")][Remainder] string tag)
         {
-            var oldTag = tagService.EditTag(Context.User.Id, tag);
+            TimeStampDto oldTag = tagService.EditTag(Context.User.Id, tag);
             logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
         }
 

@@ -9,15 +9,16 @@ namespace discordbot.Services.Interfaces
 {
     public interface ITagService
     {
-        Task StartTag();
+        Task<bool> StartTag();
         void EndTag();
-        Tag GetTag(string tag);
-        IEnumerable<Tag> ListTag(string videoId = null);
-        Tag AddTag(string tag, ulong userId, string userName);
-        Tag EditTag(ulong userId, string tag);
+        TimeStampDto GetTag(string tag);
+        IEnumerable<TimeStampDto> ListTag(string videoId = null);
+        TimeStampDto AddTag(string tag, ulong userId, string userName);
+        TimeStampDto EditTag(ulong userId, string tag);
         bool DeleteTag(string tag);
 
-        Livestream CurrentLiveStream { get; }
+        VideoDto CurrentLiveStream { get; }
+        bool IsLive { get; }
 
         DateTime RecalculateTag(DateTime dt, string videoId = null);
     }
