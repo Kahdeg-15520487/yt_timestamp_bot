@@ -1,8 +1,15 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
+using discordbot;
+using discordbot.DAL.Implementations;
+using discordbot.DAL.Interfaces;
+using discordbot.Services;
+using discordbot.Services.Interfaces;
 
 using DiscordBot.BackgroundServices;
 
+using LiteDB;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,17 +21,33 @@ using System.Threading.Tasks;
 
 namespace DiscordBot
 {
+    /*
+     * this bot need 3 environment variables
+     * yt_ts_BOTTOKEN
+     * yt_ts_CONNSTR
+     * yt_ts_APIKEY
+     */
+
     class Program
     {
-
-        public static readonly string APPLICATION_NAME = "discord_bot";
+        public static readonly string APPLICATION_NAME = "yt_ts";
+        public static readonly string VERSION = "0.1.0";
 
         public static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
-
-        public async Task MainAsync()
         {
-            await new HostBuilder()
+            try
+            {
+                new Program().MainAsync(args).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        public async Task MainAsync(string[] args)
+        {
+            await Host.CreateDefaultBuilder(args)
                       .ConfigureServices(ConfigureServices)
                       .ConfigureLogging((hostContext, builder) =>
                       {
@@ -32,7 +55,21 @@ namespace DiscordBot
                           builder.AddConsole();
                           builder.AddFile(APPLICATION_NAME + "-{Date}.txt");
                       })
+                      .ConfigureWebHostDefaults(wb =>
+                      {
+                          wb.UseStartup<Startup>();
+                      })
                       .RunConsoleAsync();
+
+            //await new HostBuilder()
+            //          .ConfigureServices(ConfigureServices)
+            //          .ConfigureLogging((hostContext, builder) =>
+            //          {
+            //              builder.ClearProviders();
+            //              builder.AddConsole();
+            //              builder.AddFile(APPLICATION_NAME + "-{Date}.txt");
+            //          })
+            //          .RunConsoleAsync();
         }
 
         private static IConfiguration configuration;
@@ -57,6 +94,12 @@ namespace DiscordBot
                     .AddSingleton<DiscordSocketClient>()
                     .AddSingleton<CommandService>()
                     .AddSingleton<CommandHandler>()
+
+                    .AddSingleton<ILiteDatabase>(new LiteDatabase(configuration["_CONNSTR"]))
+                    .AddTransient(typeof(IBaseRepository<>), typeof(BaseRepository<>))
+                    .AddTransient<ITimeStampRepository, TimestampRepository>()
+                    .AddTransient<ITagService, TagService>()
+                    .AddTransient<YoutubeInterface>()
 
                     .AddHostedService<DiscordHandlerHostedService>()
                     ;

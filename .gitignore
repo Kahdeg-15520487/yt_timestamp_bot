@@ -357,3 +357,9 @@ MigrationBackup/
 .ionide/
 
 secret.json
+
+*.db
+vid_info.json
+yt_ts-*.txt
+
+Properties/launch.json

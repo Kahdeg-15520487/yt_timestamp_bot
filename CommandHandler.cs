@@ -15,7 +15,7 @@ namespace DiscordBot
 {
     class CommandHandler
     {
-        private static readonly char COMMAND_PREFIX = '~';
+        private static readonly char COMMAND_PREFIX = '!';
 
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
@@ -47,6 +47,8 @@ namespace DiscordBot
             IEnumerable<ModuleInfo> modules = await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
                                             services: this.serviceProvider);
             StringBuilder sb = new StringBuilder();
+            sb.AppendLine(Program.APPLICATION_NAME);
+            sb.AppendLine(Program.VERSION);
             sb.AppendLine("Discord Modules loaded:");
             StringBuilder help = new StringBuilder();
             foreach (ModuleInfo module in modules)

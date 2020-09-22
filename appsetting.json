@@ -1,4 +1,11 @@
 {
     "clientId": "lala",
-    "clientSecret": "lolo"
+    "clientSecret": "lolo",
+    "Kestrel": {
+        "EndPoints": {
+            "Http": {
+                "Url": "http://localhost:5000"
+            }
+        }
+    }
 }
