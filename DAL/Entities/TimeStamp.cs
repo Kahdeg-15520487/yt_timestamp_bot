@@ -29,14 +29,14 @@ namespace discordbot.DAL.Entities
             UserName = tag.UserName;
         }
 
-        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, ulong userId, string userName)
+        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, ulong userId, string userName, double min)
         {
             this.TagContent = tagContent;
             this.VideoId = videoId;
             this.UserId = userId;
             this.UserName = userName;
-            ActualTime = DateTime.UtcNow;
-            Time = (DateTime.UtcNow - videoStartTime).TotalSeconds;
+            ActualTime = DateTime.UtcNow - TimeSpan.FromMinutes(min);
+            Time = (ActualTime - videoStartTime).TotalSeconds;
         }
 
         public override string ToString()

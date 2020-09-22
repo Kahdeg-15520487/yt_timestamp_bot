@@ -63,12 +63,30 @@ namespace DiscordBot.Modules
             }
         }
 
+        [Command("start")]
+        [Summary("start recording tag")]
+        public async Task StartTag([Summary("videoId")] string videoId)
+        {
+            if (!await tagService.StartTag(videoId))
+            {
+                await base.ReplyAsync("Found no stream");
+            }
+        }
+
         [Command("t")]
         [Summary("tag current time in livestream")]
         public async Task Tag([Summary("tag")][Remainder] string tag)
         {
             tagService.AddTag(tag, Context.User.Id, Context.User.Username);
             logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag}");
+        }
+
+        [Command("ct")]
+        [Summary("tag in the past in livestream\n\t\t\tex: ct 0.5 words")]
+        public async Task Tag([Summary("time to subtract in minutes")] double min, [Summary("tag")][Remainder] string tag)
+        {
+            tagService.AddTag(tag, Context.User.Id, Context.User.Username, min);
+            logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {min} minutes");
         }
 
         [Command("r")]
@@ -92,7 +110,7 @@ namespace DiscordBot.Modules
                 DateTime oldDt = tagService.RecalculateTag(dt, videoId);
                 await base.ReplyAsync($"recalculate time stamp from {oldDt.ToLongTimeString()} to {dt.ToLongTimeString()} for video {Utility.GetYoutubeUrl(videoId)}");
             }
-            catch(FormatException formatEx)
+            catch (FormatException formatEx)
             {
                 await base.ReplyAsync("Wrong time format");
             }

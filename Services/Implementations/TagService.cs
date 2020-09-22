@@ -3,6 +3,7 @@ using discordbot.DAL.Interfaces;
 using discordbot.Services.DTOs;
 using discordbot.Services.Interfaces;
 
+using Google.Apis.Http;
 using Google.Apis.Logging;
 using Google.Apis.YouTube.v3;
 
@@ -36,17 +37,21 @@ namespace discordbot.Services
             this.ytInterface = ytInterface;
         }
 
-        public async Task<bool> StartTag()
+        public async Task<bool> StartTag(string videoId = null)
         {
             //todo replace with a mechanism of auto stream grabbing
             YouTubeService ytService = ytInterface.GetYoutubeService();
             try
             {
-                string livestreamId = await ytInterface.GetLiveStream(ytService, "Upcoming");
+                string livestreamId = videoId;
                 if (livestreamId == null)
                 {
-                    logger.LogInformation("null");
-                    livestreamId = await ytInterface.GetLiveStream(ytService, "Live");
+                    livestreamId = await ytInterface.GetLiveStream(ytService, "Upcoming");
+                    if (livestreamId == null)
+                    {
+                        logger.LogInformation("null");
+                        livestreamId = await ytInterface.GetLiveStream(ytService, "Live");
+                    }
                 }
                 currentLiveStream = ytInterface.GetVideoInfo(ytService, livestreamId).Result;
                 logger.LogInformation($"starting tagging for {livestreamId}");
@@ -94,11 +99,11 @@ namespace discordbot.Services
             return querry.ToList();
         }
 
-        public TimeStampDto AddTag(string tagContent, ulong userId, string userName)
+        public TimeStampDto AddTag(string tagContent, ulong userId, string userName, double min = 0)
         {
             if (currentLiveStream != null)
             {
-                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, userId, userName);
+                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, userId, userName, min);
                 ObjectId id = db.Save(ts);
                 ts.Id = id;
                 return new TimeStampDto(ts);
@@ -115,8 +120,8 @@ namespace discordbot.Services
         {
             if (currentLiveStream != null)
             {
-                TimeStamp timeStamp = db.Query(ts => ts.UserId == userId)
-                              .OrderBy(ts => ts.Time)
+                TimeStamp timeStamp = db.Query(ts => ts.UserId == userId && ts.VideoId == currentLiveStream.VideoId)
+                              .OrderByDescending(ts => ts.Time)
                               .FirstOrDefault();
                 TimeStampDto oldtag = new TimeStampDto(timeStamp);
                 if (timeStamp == null)

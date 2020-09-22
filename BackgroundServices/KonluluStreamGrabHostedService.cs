@@ -38,7 +38,7 @@ namespace discordbot.BackgroundServices
         public override Task StartAsync(CancellationToken cancellationToken)
         {
             logger.LogInformation("Timer Manager Service started");
-            taskQueue.QueueBackgroundWorkItem((c) => KonluluStreamGrabHostedService.RecurringTimer(c, 1));
+            //taskQueue.QueueBackgroundWorkItem((c) => KonluluStreamGrabHostedService.RecurringTimer(c, 1));
             return base.StartAsync(cancellationToken);
         }
 
