@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+	<PackageReference Include="Microsoft.NETCore.Targets" Version="3.0.0" PrivateAssets="all" />
     <PackageReference Include="discord.net" Version="2.2.0" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.49.0.2084" />
     <PackageReference Include="LiteDB" Version="5.0.9" />
