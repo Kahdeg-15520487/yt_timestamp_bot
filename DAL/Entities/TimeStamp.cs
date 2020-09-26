@@ -11,6 +11,7 @@ namespace discordbot.DAL.Entities
     class TimeStamp : BaseEntity
     {
         public DateTime ActualTime { get; set; }
+        public DateTime LastModified { get; set; }
         public double Time { get; set; }
         public string TagContent { get; set; }
         public string VideoId { get; set; }
@@ -19,14 +20,15 @@ namespace discordbot.DAL.Entities
 
         public TimeStamp() { }
 
-        public TimeStamp(TimeStampDto tag)
+        public TimeStamp(TimeStampDto dto)
         {
-            TagContent = tag.TagContent;
-            VideoId = tag.VideoId;
-            UserId = tag.UserId;
-            ActualTime = tag.ActualTime;
-            Time = tag.Time;
-            UserName = tag.UserName;
+            TagContent = dto.TagContent;
+            VideoId = dto.VideoId;
+            UserId = dto.UserId;
+            ActualTime = dto.ActualTime;
+            LastModified = dto.LastModified;
+            Time = dto.Time;
+            UserName = dto.UserName;
         }
 
         public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, ulong userId, string userName, double min)
@@ -36,6 +38,7 @@ namespace discordbot.DAL.Entities
             this.UserId = userId;
             this.UserName = userName;
             ActualTime = DateTime.UtcNow - TimeSpan.FromMinutes(min);
+            LastModified = DateTime.UtcNow;
             Time = (ActualTime - videoStartTime).TotalSeconds;
         }
 

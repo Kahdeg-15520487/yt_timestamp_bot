@@ -64,10 +64,14 @@ namespace DiscordBot.Modules
         }
 
         [Command("start")]
-        [Summary("start recording tag")]
+        [Summary("start recording tag with videoId\n\t\t\tex: start pG-KF1HFt4w\n\t\t\t    start https://www.youtube.com/watch?v=pG-KF1HFt4w")]
         public async Task StartTag([Summary("videoId")] string videoId)
         {
-            if (!await tagService.StartTag(videoId))
+            if (await tagService.StartTag(videoId))
+            {
+                await base.ReplyAsync($"Start recording tag for {videoId}");
+            }
+            else
             {
                 await base.ReplyAsync("Found no stream");
             }

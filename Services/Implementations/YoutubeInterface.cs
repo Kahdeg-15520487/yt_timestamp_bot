@@ -81,11 +81,7 @@ namespace discordbot.Services
 
         private async Task<VideoDto> GetUpcomingLiveStream()
         {
-            YouTubeService t = new YouTubeService(new Google.Apis.Services.BaseClientService.Initializer()
-            {
-                ApiKey = ApiKey,
-                ApplicationName = "TimeStampBot"
-            });
+            YouTubeService t = GetYoutubeService();
 
             SearchResource.ListRequest request = t.Search.List("id");
             request.ChannelId = "UC_a1ZYZ8ZTXpjg9xUY9sj8w";
@@ -100,6 +96,32 @@ namespace discordbot.Services
                 VideoId = livestream?.Id.VideoId,
                 StartTime = TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(livestream.Snippet.PublishedAt))
             };
+        }
+
+        internal async Task<string> GetVideoId(string videoId)
+        {
+            try
+            {
+                var uri = new Uri(videoId);
+                var querryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+                videoId = querryDict["v"];
+            }
+            catch
+            {
+            }
+
+            YouTubeService t = GetYoutubeService();
+            VideosResource.ListRequest request = t.Videos.List("id");
+            request.Id = videoId;
+            VideoListResponse response = await request.ExecuteAsync();
+            if (response.Items.Count > 0)
+            {
+                return videoId;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         internal async Task<string> GetLiveStream(YouTubeService ytService, string eventType)

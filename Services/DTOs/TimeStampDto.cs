@@ -11,6 +11,7 @@ namespace discordbot.Services.DTOs
         public string Id { get; set; }
         public string TagContent { get; set; }
         public DateTime ActualTime { get; set; }
+        public DateTime LastModified { get; set; }
         public double Time { get; set; }
         public string VideoId { get; set; }
         public ulong UserId { get; private set; }
@@ -23,6 +24,7 @@ namespace discordbot.Services.DTOs
             Id = timestamp.Id.ToString();
             TagContent = timestamp.TagContent;
             ActualTime = timestamp.ActualTime;
+            LastModified = timestamp.LastModified;
             VideoId = timestamp.VideoId;
             Time = timestamp.Time;
             UserId = timestamp.UserId;

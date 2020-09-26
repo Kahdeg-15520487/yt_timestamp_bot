@@ -53,7 +53,8 @@ namespace discordbot.Services
                         livestreamId = await ytInterface.GetLiveStream(ytService, "Live");
                     }
                 }
-                currentLiveStream = ytInterface.GetVideoInfo(ytService, livestreamId).Result;
+                livestreamId = await ytInterface.GetVideoId(livestreamId);
+                currentLiveStream = await ytInterface.GetVideoInfo(ytService, livestreamId);
                 logger.LogInformation($"starting tagging for {livestreamId}");
                 return true;
             }
@@ -121,7 +122,7 @@ namespace discordbot.Services
             if (currentLiveStream != null)
             {
                 TimeStamp timeStamp = db.Query(ts => ts.UserId == userId && ts.VideoId == currentLiveStream.VideoId)
-                              .OrderByDescending(ts => ts.Time)
+                              .OrderByDescending(ts => ts.LastModified)
                               .FirstOrDefault();
                 TimeStampDto oldtag = new TimeStampDto(timeStamp);
                 if (timeStamp == null)
@@ -130,6 +131,7 @@ namespace discordbot.Services
                 }
 
                 timeStamp.TagContent = tagContent;
+                timeStamp.LastModified = DateTime.UtcNow;
                 db.Save(timeStamp);
                 return oldtag;
             }
