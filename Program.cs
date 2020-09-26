@@ -9,7 +9,7 @@ using discordbot.DAL.Interfaces;
 using discordbot.Services;
 using discordbot.Services.Interfaces;
 
-using DiscordBot.BackgroundServices;
+using discordbot.BackgroundServices;
 
 using LiteDB;
 
@@ -23,7 +23,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DiscordBot
+namespace discordbot
 {
     /*
      * this bot need 3 environment variables

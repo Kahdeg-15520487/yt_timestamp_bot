@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 
 using discordbot;
+using discordbot.Modules;
 using discordbot.Services;
 using discordbot.Services.DTOs;
 using discordbot.Services.Interfaces;
@@ -16,7 +17,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DiscordBot.Modules
+namespace discordbot.Modules
 {
     [Name(DiscordModule.MODULE_NAME)]
     [Summary(DiscordModule.MODULE_DESCRIPTION)]
@@ -95,6 +96,7 @@ namespace DiscordBot.Modules
 
         [Command("r")]
         [Summary("Recalculate time stamp with a new time(in UTC)\n\t\t\tex: r hh:mm:ss")]
+        [RequireRole(nameof(Roles.TagCalibrator))]
         public async Task CallibrateTag([Summary("new time")] string newTime)
         {
             if (!tagService.IsLive)
@@ -106,6 +108,7 @@ namespace DiscordBot.Modules
 
         [Command("r")]
         [Summary("Recalculate time stamp with a new time(in UTC) with videoId\n\t\t\tex: r hh:mm:ss videoId")]
+        [RequireRole(nameof(Roles.TagCalibrator))]
         public async Task CallibrateTag([Summary("new time")] string newTime, [Summary("videoId")] string videoId)
         {
             try

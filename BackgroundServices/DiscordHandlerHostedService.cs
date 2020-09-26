@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DiscordBot.BackgroundServices
+namespace discordbot.BackgroundServices
 {
     class DiscordHandlerHostedService : BackgroundService
     {

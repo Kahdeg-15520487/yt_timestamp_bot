@@ -1,7 +1,7 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 
-using DiscordBot.Modules;
+using discordbot.Modules;
 
 using Microsoft.Extensions.Logging;
 
@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DiscordBot
+namespace discordbot
 {
     class CommandHandler
     {
