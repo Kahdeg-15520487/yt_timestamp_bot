@@ -54,7 +54,15 @@ namespace discordbot.Services
                     }
                 }
                 livestreamId = await ytInterface.GetVideoId(livestreamId);
-                currentLiveStream = await ytInterface.GetVideoInfo(ytService, livestreamId);
+                try
+                {
+                    currentLiveStream = await ytInterface.GetVideoInfo(ytService, livestreamId);
+                }
+                catch (StartCapturingTooSoonException ex)
+                {
+                    logger.LogError(ex, "Start capture too soon");
+                    return false;
+                }
                 logger.LogInformation($"starting tagging for {livestreamId}");
                 return true;
             }
@@ -105,6 +113,18 @@ namespace discordbot.Services
             if (currentLiveStream != null)
             {
                 TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, userId, userName, min);
+                ObjectId id = db.Save(ts);
+                ts.Id = id;
+                return new TimeStampDto(ts);
+            }
+            return null;
+        }
+
+        public TimeStampDto AddTag(string tagContent, ulong userId, string userName, DateTime actualTime)
+        {
+            if (currentLiveStream != null)
+            {
+                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, actualTime, userId, userName);
                 ObjectId id = db.Save(ts);
                 ts.Id = id;
                 return new TimeStampDto(ts);

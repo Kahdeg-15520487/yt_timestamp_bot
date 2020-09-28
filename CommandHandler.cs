@@ -15,7 +15,7 @@ namespace discordbot
 {
     class CommandHandler
     {
-        private static readonly char COMMAND_PREFIX = '~';
+        private static readonly char COMMAND_PREFIX = '!';
 
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;

@@ -42,6 +42,17 @@ namespace discordbot.DAL.Entities
             Time = (ActualTime - videoStartTime).TotalSeconds;
         }
 
+        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, DateTime actualTime, ulong userId, string userName)
+        {
+            this.TagContent = tagContent;
+            this.VideoId = videoId;
+            this.UserId = userId;
+            this.UserName = userName;
+            ActualTime = actualTime;
+            LastModified = DateTime.UtcNow;
+            Time = (ActualTime - videoStartTime).TotalSeconds;
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();

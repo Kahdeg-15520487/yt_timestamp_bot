@@ -14,6 +14,7 @@ namespace discordbot.Services.Interfaces
         TimeStampDto GetTag(string tag);
         IEnumerable<TimeStampDto> ListTag(string videoId = null);
         TimeStampDto AddTag(string tag, ulong userId, string userName, double min = 0);
+        TimeStampDto AddTag(string tag, ulong userId, string userName, DateTime actualTime);
         TimeStampDto EditTag(ulong userId, string tag);
         bool DeleteTag(string tag);
 

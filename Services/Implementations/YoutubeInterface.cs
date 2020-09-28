@@ -20,6 +20,17 @@ using System.Globalization;
 
 namespace discordbot.Services
 {
+    [Serializable]
+    public class StartCapturingTooSoonException : Exception
+    {
+        public StartCapturingTooSoonException() { }
+        public StartCapturingTooSoonException(string message) : base(message) { }
+        public StartCapturingTooSoonException(string message, Exception inner) : base(message, inner) { }
+        protected StartCapturingTooSoonException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     class YoutubeInterface
     {
         private readonly string ApiKey;
@@ -155,10 +166,16 @@ namespace discordbot.Services
                                  "snippet(channelId,channelTitle,description,liveBroadcastContent,publishedAt,thumbnails,title),statistics)";
                 VideoListResponse result = await request.ExecuteAsync();
                 Video livestream = result.Items.FirstOrDefault();
+
+                if (!DateTime.TryParse(livestream.LiveStreamingDetails.ActualStartTime, null, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime startTime))
+                {
+                    throw new StartCapturingTooSoonException(videoId);
+                }
+
                 return new VideoDto()
                 {
                     VideoId = livestream?.Id,
-                    StartTime = DateTime.Parse(livestream.LiveStreamingDetails.ActualStartTime, styles: DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal),
+                    StartTime = startTime,
                     EndTime = DateTime.Parse(livestream.LiveStreamingDetails.ActualEndTime ?? DateTime.UtcNow.ToLongTimeString(), styles: DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal)
                 };
             }
