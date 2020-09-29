@@ -35,7 +35,7 @@ namespace discordbot
     class Program
     {
         public static readonly string APPLICATION_NAME = "yt_ts";
-        public static readonly string VERSION = "0.1.0";
+        public static readonly string VERSION = "0.2.0";
         public static readonly char COMMAND_PREFIX = '~';
 
         public static void Main(string[] args)
