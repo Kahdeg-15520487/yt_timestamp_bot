@@ -95,7 +95,7 @@ namespace discordbot.Modules
         }
 
         [Command("backward")]
-        [Summary("Shift time stamp with backward x seconds\n\t\t\tex: backward 90")]
+        [Summary("Shift time stamp with backward x seconds\n\t\t\tex: backward 90 videoId")]
         [RequireRole(nameof(Roles.TagCalibrator))]
         public async Task ShiftTagBackward([Summary("time to shift")] int x, [Summary("videoId")] string videoId)
         {
@@ -107,7 +107,7 @@ namespace discordbot.Modules
         }
 
         [Command("forward")]
-        [Summary("Recalculate time stamp with a new time(in UTC) with videoId\n\t\t\tex: r hh:mm:ss videoId")]
+        [Summary("Shift time stamp with forward x seconds\n\t\t\tex: forward 90 videoId")]
         [RequireRole(nameof(Roles.TagCalibrator))]
         public async Task ShiftTagForward([Summary("time to shift")] int x, [Summary("videoId")] string videoId)
         {
@@ -150,9 +150,15 @@ namespace discordbot.Modules
         [Summary("list tag with videoId\n\t\t\tex: list VQu7r649K0s")]
         public async Task ListTag([Summary("videoId")] string videoId)
         {
+            List<TimeStampDto> timeStamps = tagService.ListTag(videoId).ToList();
+            if (timeStamps.Count == 0)
+            {
+                await this.ReplyAsync($"No tags is registered for {videoId}");
+            }
+
             List<string> tagSegments = new List<string>();
             StringBuilder sb = new StringBuilder();
-            foreach (TimeStampDto t in tagService.ListTag(videoId))
+            foreach (TimeStampDto t in timeStamps)
             {
                 sb.AppendFormat("[{0}]({1}) : {2} by {3}", Utility.ToTimeStamp(t.Time), Utility.GetYoutubeUrlWithTime(t.VideoId, t.Time), t.TagContent, t.UserName);
                 sb.AppendLine();
