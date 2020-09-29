@@ -158,27 +158,26 @@ namespace discordbot.Services
             return null;
         }
 
-        public DateTime RecalculateTag(DateTime dt, string videoId = null)
+        public bool ShiftTag(int x, string videoId = null)
         {
-            if (true)
-            {
-                //todo ensure videoId exist
-            }
-
-            IEnumerable<TimeStamp> timeStamps = videoId == null ?
+            List<TimeStamp> timeStamps = (videoId == null ?
                 db.Query(ts => ts.VideoId.Equals(currentLiveStream.VideoId))
                 :
                 db.Query(ts => ts.VideoId.Equals(videoId))
-                ;
-            DateTime oldTime = default;
+                ).ToList();
+
+            if (timeStamps.Count == 0)
+            {
+                throw new KeyNotFoundException(videoId);
+            }
+
             foreach (TimeStamp timeStamp in timeStamps)
             {
-                TimeSpan timeSpan = TimeSpan.FromSeconds(timeStamp.Time);
-                oldTime = timeStamp.ActualTime - timeSpan;
-                timeStamp.Time = (timeStamp.ActualTime - dt).TotalSeconds;
+                timeStamp.ActualTime = timeStamp.ActualTime.AddSeconds(x);
+                timeStamp.Time += x;
                 db.Save(timeStamp);
             }
-            return oldTime;
+            return true;
         }
     }
 }

@@ -15,8 +15,6 @@ namespace discordbot
 {
     class CommandHandler
     {
-        private static readonly char COMMAND_PREFIX = '!';
-
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly IServiceProvider serviceProvider;
@@ -92,7 +90,7 @@ namespace discordbot
             int argPos = 0;
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!(message.HasCharPrefix(COMMAND_PREFIX, ref argPos) ||
+            if (!(message.HasCharPrefix(Program.COMMAND_PREFIX, ref argPos) ||
                 message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
                 message.Author.IsBot)
                 return;

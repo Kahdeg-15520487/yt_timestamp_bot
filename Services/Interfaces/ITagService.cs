@@ -20,7 +20,6 @@ namespace discordbot.Services.Interfaces
 
         VideoDto CurrentLiveStream { get; }
         bool IsLive { get; }
-
-        DateTime RecalculateTag(DateTime dt, string videoId = null);
+        bool ShiftTag(int x, string videoId = null);
     }
 }

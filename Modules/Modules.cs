@@ -94,32 +94,35 @@ namespace discordbot.Modules
             logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {min} minutes");
         }
 
-        [Command("r")]
-        [Summary("Recalculate time stamp with a new time(in UTC)\n\t\t\tex: r hh:mm:ss")]
+        [Command("backward")]
+        [Summary("Shift time stamp with backward x seconds\n\t\t\tex: backward 90")]
         [RequireRole(nameof(Roles.TagCalibrator))]
-        public async Task CallibrateTag([Summary("new time")] string newTime)
+        public async Task ShiftTagBackward([Summary("time to shift")] int x, [Summary("videoId")] string videoId)
         {
             if (!tagService.IsLive)
             {
                 return;
             }
-            await this.CallibrateTag(newTime, tagService.CurrentLiveStream.VideoId);
+            await this.ShiftTagForward(-x, tagService.CurrentLiveStream.VideoId);
         }
 
-        [Command("r")]
+        [Command("forward")]
         [Summary("Recalculate time stamp with a new time(in UTC) with videoId\n\t\t\tex: r hh:mm:ss videoId")]
         [RequireRole(nameof(Roles.TagCalibrator))]
-        public async Task CallibrateTag([Summary("new time")] string newTime, [Summary("videoId")] string videoId)
+        public async Task ShiftTagForward([Summary("time to shift")] int x, [Summary("videoId")] string videoId)
         {
             try
             {
-                DateTime dt = DateTime.Parse(newTime);
-                DateTime oldDt = tagService.RecalculateTag(dt, videoId);
-                await base.ReplyAsync($"recalculate time stamp from {oldDt.ToLongTimeString()} to {dt.ToLongTimeString()} for video {Utility.GetYoutubeUrl(videoId)}");
+                tagService.ShiftTag(x, videoId);
+                await ReplyAsync($"Shifted {x} seconds {(x > 0 ? "forward" : "backward")} for video {Utility.GetYoutubeUrl(videoId)}");
             }
-            catch (FormatException formatEx)
+            catch (KeyNotFoundException knfex)
             {
-                await base.ReplyAsync("Wrong time format");
+                await ReplyAsync($"Video not found");
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"Can't shift tag time for {videoId}");
             }
         }
 
@@ -132,7 +135,15 @@ namespace discordbot.Modules
                 return;
             }
 
-            await this.ListTag(tagService.CurrentLiveStream.VideoId);
+            try
+            {
+                await this.ListTag(tagService.CurrentLiveStream.VideoId);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, nameof(ListTag));
+                await this.ReplyAsync($"Error when listing tags for {tagService.CurrentLiveStream.VideoId}");
+            }
         }
 
         [Command("list")]
@@ -153,9 +164,14 @@ namespace discordbot.Modules
                 }
             }
 
-            if (sb.Length >= 0)
+            if (sb.Length > 0)
             {
                 tagSegments.Add(sb.ToString());
+            }
+            else
+            {
+                await this.ReplyAsync($"No tags is registered for {videoId}");
+                return;
             }
 
             bool isFirst = true;
