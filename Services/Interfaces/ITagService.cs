@@ -10,10 +10,11 @@ namespace discordbot.Services.Interfaces
     public interface ITagService
     {
         Task<bool> StartTag(string videoId = null);
-        void EndTag();
+        Task EndTag();
         TimeStampDto GetTag(string tag);
-        IEnumerable<TimeStampDto> ListTag(string videoId = null);
-        TimeStampDto AddTag(string tag, ulong userId, string userName, double min = 0);
+        List<TimeStampDto> ListTag(string videoId = null);
+        List<TimeStampDto> ListTag(string videoId, ulong userId);
+        TimeStampDto AddTag(string tag, ulong userId, string userName, int second = 0);
         TimeStampDto AddTag(string tag, ulong userId, string userName, DateTime actualTime);
         TimeStampDto EditTag(ulong userId, string tag);
         bool DeleteTag(string tag);

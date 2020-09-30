@@ -30,6 +30,8 @@ namespace discordbot.Modules
         private readonly YoutubeInterface ytService;
         private readonly ITagService tagService;
 
+        private bool IsEdit = false;
+
         public static string HELP_STRING { get; internal set; } = string.Empty;
 
         internal DiscordModule(ILogger<DiscordModule> logger,
@@ -44,11 +46,14 @@ namespace discordbot.Modules
 
         protected override void BeforeExecute(CommandInfo command)
         {
+            IsEdit = Context.Message.EditedTimestamp != null;
+
             base.BeforeExecute(command);
         }
 
         [Command("help")]
         [Summary("Get help")]
+        [NoEdit]
         public async Task PrintHelpAsync()
         {
             await base.ReplyAsync(DiscordModule.HELP_STRING);
@@ -56,6 +61,7 @@ namespace discordbot.Modules
 
         [Command("start")]
         [Summary("start recording tag")]
+        [NoEdit]
         public async Task StartTag()
         {
             if (!await tagService.StartTag())
@@ -66,6 +72,7 @@ namespace discordbot.Modules
 
         [Command("start")]
         [Summary("start recording tag with videoId\n\t\t\tex: start pG-KF1HFt4w\n\t\t\t    start https://www.youtube.com/watch?v=pG-KF1HFt4w")]
+        [NoEdit]
         public async Task StartTag([Summary("videoId")] string videoId)
         {
             if (await tagService.StartTag(videoId))
@@ -82,21 +89,30 @@ namespace discordbot.Modules
         [Summary("tag current time in livestream")]
         public async Task Tag([Summary("tag")][Remainder] string tag)
         {
-            tagService.AddTag(tag, Context.User.Id, Context.User.Username);
-            logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag}");
+            if (IsEdit)
+            {
+                await EditTag(tag);
+            }
+            else
+            {
+                tagService.AddTag(tag, Context.User.Id, Context.User.Username);
+                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag}");
+            }
         }
 
         [Command("ct")]
-        [Summary("tag in the past in livestream\n\t\t\tex: ct 0.5 words")]
-        public async Task Tag([Summary("time to subtract in minutes")] double min, [Summary("tag")][Remainder] string tag)
+        [Summary("tag in the past in livestream\n\t\t\tex: ct 30 words\n\t\t\twill tag \"words\" 30 seconds back")]
+        [NoEdit]
+        public async Task Tag([Summary("time to subtract in seconds")] int seconds, [Summary("tag")][Remainder] string tag)
         {
-            tagService.AddTag(tag, Context.User.Id, Context.User.Username, min);
-            logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {min} minutes");
+            tagService.AddTag(tag, Context.User.Id, Context.User.Username, seconds);
+            logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {seconds} seconds");
         }
 
         [Command("backward")]
         [Summary("Shift time stamp with backward x seconds\n\t\t\tex: backward 90 videoId")]
-        [RequireRole(nameof(Roles.TagCalibrator))]
+        //[RequireRole(nameof(Roles.TagCalibrator))]
+        [NoEdit]
         public async Task ShiftTagBackward([Summary("time to shift")] int x, [Summary("videoId")] string videoId)
         {
             if (!tagService.IsLive)
@@ -108,7 +124,8 @@ namespace discordbot.Modules
 
         [Command("forward")]
         [Summary("Shift time stamp with forward x seconds\n\t\t\tex: forward 90 videoId")]
-        [RequireRole(nameof(Roles.TagCalibrator))]
+        //[RequireRole(nameof(Roles.TagCalibrator))]
+        [NoEdit]
         public async Task ShiftTagForward([Summary("time to shift")] int x, [Summary("videoId")] string videoId)
         {
             try
@@ -128,10 +145,12 @@ namespace discordbot.Modules
 
         [Command("list")]
         [Summary("list tag")]
+        [NoEdit]
         public async Task ListTag()
         {
             if (tagService.CurrentLiveStream == null)
             {
+                await ReplyAsync($"No stream is captured!");
                 return;
             }
 
@@ -148,14 +167,34 @@ namespace discordbot.Modules
 
         [Command("list")]
         [Summary("list tag with videoId\n\t\t\tex: list VQu7r649K0s")]
+        [NoEdit]
         public async Task ListTag([Summary("videoId")] string videoId)
         {
-            List<TimeStampDto> timeStamps = tagService.ListTag(videoId).ToList();
+            List<TimeStampDto> timeStamps = tagService.ListTag(videoId);
             if (timeStamps.Count == 0)
             {
                 await this.ReplyAsync($"No tags is registered for {videoId}");
             }
 
+            await RenderList(timeStamps, videoId);
+        }
+
+        [Command("listmine")]
+        [Summary("list tag belong to user with videoId\n\t\t\tex: list VQu7r649K0s")]
+        [NoEdit]
+        public async Task ListMineTag([Summary("videoId")] string videoId)
+        {
+            List<TimeStampDto> timeStamps = tagService.ListTag(videoId, Context.User.Id);
+            if (timeStamps.Count == 0)
+            {
+                await this.ReplyAsync($"No tags is registered for {videoId}");
+            }
+
+            await RenderList(timeStamps, videoId, Context.User.Username);
+        }
+
+        private async Task RenderList(List<TimeStampDto> timeStamps, string videoId, string username = null)
+        {
             List<string> tagSegments = new List<string>();
             StringBuilder sb = new StringBuilder();
             foreach (TimeStampDto t in timeStamps)
@@ -189,6 +228,10 @@ namespace discordbot.Modules
                 {
                     isFirst = false;
                     embed.Title = "Tags list";
+                    if (!string.IsNullOrEmpty(username))
+                    {
+                        embed.Title += " by " + username;
+                    }
                     embed.Description = Utility.GetYoutubeUrl(videoId);
                 }
 
@@ -200,6 +243,7 @@ namespace discordbot.Modules
 
         [Command("e")]
         [Summary("edit previous tag")]
+        [NoEdit]
         public async Task EditTag([Summary("tag")][Remainder] string tag)
         {
             TimeStampDto oldTag = tagService.EditTag(Context.User.Id, tag);

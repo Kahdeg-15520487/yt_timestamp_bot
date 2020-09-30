@@ -30,13 +30,13 @@ namespace discordbot
      * yt_ts_BOTTOKEN
      * yt_ts_CONNSTR
      * yt_ts_APIKEY
+     * yt_ts_PREFIX
      */
 
     class Program
     {
         public static readonly string APPLICATION_NAME = "yt_ts";
-        public static readonly string VERSION = "0.2.0";
-        public static readonly char COMMAND_PREFIX = '~';
+        public static readonly string VERSION = "0.3.0";
 
         public static void Main(string[] args)
         {
@@ -102,6 +102,7 @@ namespace discordbot
                     .AddSingleton<ILiteDatabase>(new LiteDatabase(configuration["_CONNSTR"]))
                     .AddTransient(typeof(IBaseRepository<>), typeof(BaseRepository<>))
                     .AddTransient<ITimeStampRepository, TimestampRepository>()
+                    .AddTransient<IVideoRepository, VideoRepository>()
                     .AddTransient<ITagService, TagService>()
                     .AddTransient<IVideoRepository, VideoRepository>()
                     .AddTransient<YoutubeInterface>()

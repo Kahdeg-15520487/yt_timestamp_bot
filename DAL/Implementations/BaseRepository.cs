@@ -35,7 +35,7 @@ namespace discordbot.DAL.Implementations
 
         public virtual IEnumerable<T> Query(Expression<Func<T, bool>> predicate)
         {
-            return db.GetCollection<T>().Find(predicate);
+            return this.GetAll().AsQueryable().Where(predicate);
         }
 
         public virtual ObjectId Save(T document)

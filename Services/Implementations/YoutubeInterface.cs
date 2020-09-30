@@ -31,6 +31,18 @@ namespace discordbot.Services
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
+
+    [Serializable]
+    public class NoActualEndtimeException : Exception
+    {
+        public NoActualEndtimeException() { }
+        public NoActualEndtimeException(string message) : base(message) { }
+        public NoActualEndtimeException(string message, Exception inner) : base(message, inner) { }
+        protected NoActualEndtimeException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     class YoutubeInterface
     {
         private readonly string ApiKey;
@@ -156,7 +168,7 @@ namespace discordbot.Services
             }
         }
 
-        internal async Task<VideoDto> GetVideoInfo(YouTubeService ytService, string videoId)
+        internal async Task<VideoDto> GetVideoInfo(YouTubeService ytService, string videoId, bool getScheduledTime = false, bool getActualEndTime = false)
         {
             try
             {
@@ -167,22 +179,38 @@ namespace discordbot.Services
                 VideoListResponse result = await request.ExecuteAsync();
                 Video livestream = result.Items.FirstOrDefault();
 
-                if (!DateTime.TryParse(livestream.LiveStreamingDetails.ActualStartTime, null, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime startTime))
+                DateTime startTime = default;
+                DateTime endTime = default;
+
+                if (getScheduledTime)
+                {
+                    DateTime.TryParse(livestream.LiveStreamingDetails.ScheduledStartTime, null, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out startTime);
+                }
+                else
+                if (!DateTime.TryParse(livestream.LiveStreamingDetails.ActualStartTime, null, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out startTime))
                 {
                     throw new StartCapturingTooSoonException(videoId);
+                }
+
+                if (getActualEndTime)
+                {
+                    if (!DateTime.TryParse(livestream.LiveStreamingDetails.ActualEndTime, null, styles: DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out endTime))
+                    {
+                        throw new NoActualEndtimeException(videoId);
+                    }
                 }
 
                 return new VideoDto()
                 {
                     VideoId = livestream?.Id,
                     StartTime = startTime,
-                    EndTime = DateTime.Parse(livestream.LiveStreamingDetails.ActualEndTime ?? DateTime.UtcNow.ToLongTimeString(), styles: DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal)
+                    EndTime = endTime
                 };
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, nameof(GetVideoInfo));
-                return null;
+                throw;
             }
         }
 

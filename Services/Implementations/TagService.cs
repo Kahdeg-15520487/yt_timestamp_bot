@@ -22,7 +22,8 @@ namespace discordbot.Services
 {
     class TagService : ITagService
     {
-        private readonly ITimeStampRepository db;
+        private readonly ITimeStampRepository tsDb;
+        private readonly IVideoRepository videoDb;
         private readonly ILogger<TagService> logger;
         private readonly YoutubeInterface ytInterface;
 
@@ -30,9 +31,10 @@ namespace discordbot.Services
         public VideoDto CurrentLiveStream { get => currentLiveStream; }
         public bool IsLive { get => currentLiveStream != null; }
 
-        public TagService(ITimeStampRepository tsDb, ILogger<TagService> logger, YoutubeInterface ytInterface)
+        public TagService(ITimeStampRepository tsDb, IVideoRepository videoDb, ILogger<TagService> logger, YoutubeInterface ytInterface)
         {
-            this.db = tsDb;
+            this.tsDb = tsDb;
+            this.videoDb = videoDb;
             this.logger = logger;
             this.ytInterface = ytInterface;
         }
@@ -63,6 +65,14 @@ namespace discordbot.Services
                     logger.LogError(ex, "Start capture too soon");
                     return false;
                 }
+
+                Video v = new Video(currentLiveStream);
+                if (videoDb.Save(v) == null)
+                {
+                    logger.LogInformation($"Can't save video object {livestreamId}");
+                    return false;
+                }
+
                 logger.LogInformation($"starting tagging for {livestreamId}");
                 return true;
             }
@@ -74,8 +84,29 @@ namespace discordbot.Services
             }
         }
 
-        public void EndTag()
+        public async Task EndTag()
         {
+            if (currentLiveStream == null)
+            {
+                return;
+            }
+
+            YouTubeService ytService = ytInterface.GetYoutubeService();
+            try
+            {
+                currentLiveStream = await ytInterface.GetVideoInfo(ytService, currentLiveStream.VideoId);
+            }
+            catch (StartCapturingTooSoonException ex)
+            {
+                logger.LogError(ex, "Start capture too soon");
+            }
+
+            Video v = new Video(currentLiveStream);
+            if (videoDb.Save(v) == null)
+            {
+                logger.LogInformation($"Can't save video object {currentLiveStream.VideoId}");
+            }
+
             currentLiveStream = null;
         }
 
@@ -83,37 +114,35 @@ namespace discordbot.Services
         {
             if (currentLiveStream != null)
             {
-                TimeStamp timestamp = db.Query(ts => ts.TagContent.Equals(tag)).FirstOrDefault();
+                TimeStamp timestamp = tsDb.Query(ts => ts.TagContent.Equals(tag)).FirstOrDefault();
                 return new TimeStampDto(timestamp);
             }
             return null;
         }
 
-        public IEnumerable<TimeStampDto> ListTag()
+        public List<TimeStampDto> ListTag(string videoId = null)
         {
-            if (currentLiveStream != null)
-            {
-                return db.Query(ts => ts.VideoId.Equals(currentLiveStream.VideoId))
-                         .OrderBy(ts => ts.Time)
-                         .Select(ts => new TimeStampDto(ts));
-            }
-            return null;
+            IEnumerable<TimeStampDto> querry = tsDb.Query(ts => ts.VideoId.Equals(videoId ?? currentLiveStream.VideoId))
+                           .OrderBy(ts => ts.Time)
+                           .Select(ts => new TimeStampDto(ts));
+
+            return querry.ToList();
         }
 
-        public IEnumerable<TimeStampDto> ListTag(string videoId)
+        public List<TimeStampDto> ListTag(string videoId, ulong userId)
         {
-            IEnumerable<TimeStampDto> querry = db.Query(ts => ts.VideoId.Equals(videoId))
+            IEnumerable<TimeStampDto> querry = tsDb.Query(ts => ts.VideoId.Equals(videoId) && ts.UserId == userId)
                            .OrderBy(ts => ts.Time)
                            .Select(ts => new TimeStampDto(ts));
             return querry.ToList();
         }
 
-        public TimeStampDto AddTag(string tagContent, ulong userId, string userName, double min = 0)
+        public TimeStampDto AddTag(string tagContent, ulong userId, string userName, int second = 0)
         {
             if (currentLiveStream != null)
             {
-                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, userId, userName, min);
-                ObjectId id = db.Save(ts);
+                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, userId, userName, second);
+                ObjectId id = tsDb.Save(ts);
                 ts.Id = id;
                 return new TimeStampDto(ts);
             }
@@ -125,7 +154,7 @@ namespace discordbot.Services
             if (currentLiveStream != null)
             {
                 TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, actualTime, userId, userName);
-                ObjectId id = db.Save(ts);
+                ObjectId id = tsDb.Save(ts);
                 ts.Id = id;
                 return new TimeStampDto(ts);
             }
@@ -141,7 +170,7 @@ namespace discordbot.Services
         {
             if (currentLiveStream != null)
             {
-                TimeStamp timeStamp = db.Query(ts => ts.UserId == userId && ts.VideoId == currentLiveStream.VideoId)
+                TimeStamp timeStamp = tsDb.Query(ts => ts.UserId == userId && ts.VideoId == currentLiveStream.VideoId)
                               .OrderByDescending(ts => ts.LastModified)
                               .FirstOrDefault();
                 TimeStampDto oldtag = new TimeStampDto(timeStamp);
@@ -152,7 +181,7 @@ namespace discordbot.Services
 
                 timeStamp.TagContent = tagContent;
                 timeStamp.LastModified = DateTime.UtcNow;
-                db.Save(timeStamp);
+                tsDb.Save(timeStamp);
                 return oldtag;
             }
             return null;
@@ -161,9 +190,9 @@ namespace discordbot.Services
         public bool ShiftTag(int x, string videoId = null)
         {
             List<TimeStamp> timeStamps = (videoId == null ?
-                db.Query(ts => ts.VideoId.Equals(currentLiveStream.VideoId))
+                tsDb.Query(ts => ts.VideoId.Equals(currentLiveStream.VideoId))
                 :
-                db.Query(ts => ts.VideoId.Equals(videoId))
+                tsDb.Query(ts => ts.VideoId.Equals(videoId))
                 ).ToList();
 
             if (timeStamps.Count == 0)
@@ -175,7 +204,7 @@ namespace discordbot.Services
             {
                 timeStamp.ActualTime = timeStamp.ActualTime.AddSeconds(x);
                 timeStamp.Time += x;
-                db.Save(timeStamp);
+                tsDb.Save(timeStamp);
             }
             return true;
         }

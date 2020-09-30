@@ -41,8 +41,12 @@ namespace discordbot.DAL.Implementations
             }
             else
             {
-                collection.Update(document);
+                if (!collection.Update(document))
+                {
+                    return null;
+                }
                 result = document.VideoId;
+
             }
             return result;
         }

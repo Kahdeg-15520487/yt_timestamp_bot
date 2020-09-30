@@ -31,13 +31,13 @@ namespace discordbot.DAL.Entities
             UserName = dto.UserName;
         }
 
-        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, ulong userId, string userName, double min)
+        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, ulong userId, string userName, int second)
         {
             this.TagContent = tagContent;
             this.VideoId = videoId;
             this.UserId = userId;
             this.UserName = userName;
-            ActualTime = DateTime.UtcNow - TimeSpan.FromMinutes(min);
+            ActualTime = DateTime.UtcNow - TimeSpan.FromSeconds(second);
             LastModified = DateTime.UtcNow;
             Time = (ActualTime - videoStartTime).TotalSeconds;
         }
