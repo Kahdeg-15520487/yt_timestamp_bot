@@ -174,6 +174,7 @@ namespace discordbot.Modules
             if (timeStamps.Count == 0)
             {
                 await this.ReplyAsync($"No tags is registered for {videoId}");
+                return;
             }
 
             await RenderList(timeStamps, videoId);

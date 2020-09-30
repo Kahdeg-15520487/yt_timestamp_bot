@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 
 using discordbot.Modules;
+using discordbot.Services.DTOs;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +43,8 @@ namespace discordbot
             _client.MessageReceived += HandleCommandAsync;
             _client.MessageUpdated += HandleUpdatedCommandAsync;
             //_client.ReactionAdded += HandleReactionAddedCommandAsync;
+
+            _commands.AddTypeReader<YoutubeVideoUrl>(new YoutubeVideoUrlTypeReader());
 
             // Here we discover all of the command modules in the entry 
             // assembly and load them. Starting from Discord.NET 2.0, a

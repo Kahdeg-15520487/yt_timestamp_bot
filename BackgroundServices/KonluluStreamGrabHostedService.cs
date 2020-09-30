@@ -318,7 +318,7 @@ namespace discordbot.BackgroundServices
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Fuse Timer Manager Service stopped");
+            logger.LogInformation("Timer Manager Service stopped");
             return base.StopAsync(cancellationToken);
         }
     }

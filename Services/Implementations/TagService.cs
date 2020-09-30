@@ -122,7 +122,9 @@ namespace discordbot.Services
 
         public List<TimeStampDto> ListTag(string videoId = null)
         {
-            IEnumerable<TimeStampDto> querry = tsDb.Query(ts => ts.VideoId.Equals(videoId ?? currentLiveStream.VideoId))
+            videoId = videoId == null ? currentLiveStream.VideoId : ytInterface.GetVideoId(videoId).Result;
+
+            IEnumerable<TimeStampDto> querry = tsDb.Query(ts => ts.VideoId.Equals(videoId))
                            .OrderBy(ts => ts.Time)
                            .Select(ts => new TimeStampDto(ts));
 
