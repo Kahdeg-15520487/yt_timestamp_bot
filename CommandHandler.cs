@@ -57,10 +57,12 @@ namespace discordbot
             IEnumerable<ModuleInfo> modules = await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
                                             services: this.serviceProvider);
             StringBuilder sb = new StringBuilder();
+            StringBuilder help = new StringBuilder();
             sb.AppendLine(Program.APPLICATION_NAME);
             sb.AppendLine(Program.VERSION);
             sb.AppendLine("Discord Modules loaded:");
-            StringBuilder help = new StringBuilder();
+            help.AppendLine(Program.APPLICATION_NAME);
+            help.AppendLine(Program.VERSION);
             foreach (ModuleInfo module in modules)
             {
                 sb.AppendLine(module.Name);

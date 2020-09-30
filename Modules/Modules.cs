@@ -91,11 +91,12 @@ namespace discordbot.Modules
         {
             if (IsEdit)
             {
-                await EditTag(tag);
+                TimeStampDto oldTag = tagService.EditTag(Context.User.Id, Context.Message.Id, tag);
+                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
             }
             else
             {
-                tagService.AddTag(tag, Context.User.Id, Context.User.Username);
+                tagService.AddTag(tag, Context.User.Id, Context.User.Username, Context.Message.Id);
                 logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag}");
             }
         }
@@ -105,7 +106,7 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task Tag([Summary("time to subtract in seconds")] int seconds, [Summary("tag")][Remainder] string tag)
         {
-            tagService.AddTag(tag, Context.User.Id, Context.User.Username, seconds);
+            tagService.AddTag(tag, Context.User.Id, Context.User.Username, Context.Message.Id, seconds);
             logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {seconds} seconds");
         }
 

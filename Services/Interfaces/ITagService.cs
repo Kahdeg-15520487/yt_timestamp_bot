@@ -14,9 +14,10 @@ namespace discordbot.Services.Interfaces
         TimeStampDto GetTag(string tag);
         List<TimeStampDto> ListTag(string videoId = null);
         List<TimeStampDto> ListTag(string videoId, ulong userId);
-        TimeStampDto AddTag(string tag, ulong userId, string userName, int second = 0);
-        TimeStampDto AddTag(string tag, ulong userId, string userName, DateTime actualTime);
+        TimeStampDto AddTag(string tag, ulong userId, string userName, ulong messageId, int second = 0);
+        TimeStampDto AddTag(string tag, ulong userId, string userName, ulong messageId, DateTime actualTime);
         TimeStampDto EditTag(ulong userId, string tag);
+        TimeStampDto EditTag(ulong userId, ulong messageId, string tag);
         bool DeleteTag(string tag);
 
         VideoDto CurrentLiveStream { get; }

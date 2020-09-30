@@ -17,6 +17,7 @@ namespace discordbot.DAL.Entities
         public string VideoId { get; set; }
         public ulong UserId { get; set; }
         public string UserName { get; internal set; }
+        public ulong MessageId { get; set; }
 
         public TimeStamp() { }
 
@@ -31,23 +32,25 @@ namespace discordbot.DAL.Entities
             UserName = dto.UserName;
         }
 
-        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, ulong userId, string userName, int second)
+        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, int second, ulong userId, string userName, ulong messageId)
         {
             this.TagContent = tagContent;
             this.VideoId = videoId;
             this.UserId = userId;
             this.UserName = userName;
+            this.MessageId = messageId;
             ActualTime = DateTime.UtcNow - TimeSpan.FromSeconds(second);
             LastModified = DateTime.UtcNow;
             Time = (ActualTime - videoStartTime).TotalSeconds;
         }
 
-        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, DateTime actualTime, ulong userId, string userName)
+        public TimeStamp(string tagContent, string videoId, DateTime videoStartTime, DateTime actualTime, ulong userId, string userName, ulong messageId)
         {
             this.TagContent = tagContent;
             this.VideoId = videoId;
             this.UserId = userId;
             this.UserName = userName;
+            this.MessageId = messageId;
             ActualTime = actualTime;
             LastModified = DateTime.UtcNow;
             Time = (ActualTime - videoStartTime).TotalSeconds;

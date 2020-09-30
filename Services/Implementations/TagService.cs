@@ -141,11 +141,11 @@ namespace discordbot.Services
             return querry.ToList();
         }
 
-        public TimeStampDto AddTag(string tagContent, ulong userId, string userName, int second = 0)
+        public TimeStampDto AddTag(string tagContent, ulong userId, string userName, ulong messageId, int second = 0)
         {
             if (currentLiveStream != null)
             {
-                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, userId, userName, second);
+                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, second, userId, userName, messageId);
                 ObjectId id = tsDb.Save(ts);
                 ts.Id = id;
                 return new TimeStampDto(ts);
@@ -153,11 +153,11 @@ namespace discordbot.Services
             return null;
         }
 
-        public TimeStampDto AddTag(string tagContent, ulong userId, string userName, DateTime actualTime)
+        public TimeStampDto AddTag(string tagContent, ulong userId, string userName, ulong messageId, DateTime actualTime)
         {
             if (currentLiveStream != null)
             {
-                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, actualTime, userId, userName);
+                TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, actualTime, userId, userName, messageId);
                 ObjectId id = tsDb.Save(ts);
                 ts.Id = id;
                 return new TimeStampDto(ts);
@@ -168,6 +168,27 @@ namespace discordbot.Services
         public bool DeleteTag(string tag)
         {
             throw new NotImplementedException();
+        }
+
+        public TimeStampDto EditTag(ulong userId, ulong messageId, string tagContent)
+        {
+            if (currentLiveStream != null)
+            {
+                TimeStamp timeStamp = tsDb.Query(ts => ts.UserId == userId && ts.MessageId == messageId && ts.VideoId == currentLiveStream.VideoId)
+                              .OrderByDescending(ts => ts.LastModified)
+                              .FirstOrDefault();
+                TimeStampDto oldtag = new TimeStampDto(timeStamp);
+                if (timeStamp == null)
+                {
+                    return null;
+                }
+
+                timeStamp.TagContent = tagContent;
+                timeStamp.LastModified = DateTime.UtcNow;
+                tsDb.Save(timeStamp);
+                return oldtag;
+            }
+            return null;
         }
 
         public TimeStampDto EditTag(ulong userId, string tagContent)
