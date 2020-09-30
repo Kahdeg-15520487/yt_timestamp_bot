@@ -62,7 +62,11 @@ namespace discordbot
                       })
                       .ConfigureWebHostDefaults(wb =>
                       {
-                          wb.UseStartup<Startup>();
+                          wb.UseStartup<Startup>()
+                            .UseKestrel(opts =>
+                              {
+                                  opts.ListenAnyIP(5000);
+                              });
                       })
                       .RunConsoleAsync();
 
