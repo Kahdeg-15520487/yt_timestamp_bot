@@ -147,10 +147,21 @@ namespace discordbot.BackgroundServices
                                 case KonluluStreamGrabState.GetUpcomingStream:
                                     {
                                         YouTubeService ytService = ytInterface.GetYoutubeService();
-                                        string livestreamId = await ytInterface.GetLiveStream(ytService, "upcoming");
+                                        string livestreamId = await ytInterface.GetLiveStream(ytService, "Upcoming");
+                                        bool foundLivestream = livestreamId != null;
                                         if (livestreamId == null)
                                         {
                                             logger.LogInformation("found no upcoming stream");
+                                            livestreamId = await ytInterface.GetLiveStream(ytService, "Live");
+                                            foundLivestream = livestreamId != null;
+                                            if (livestreamId == null)
+                                            {
+                                                logger.LogInformation("found no live stream");
+                                            }
+                                        }
+
+                                        if (!foundLivestream)
+                                        {
                                             taskQueue.QueueBackgroundWorkItem((c) =>
                                                     StateTimer(c, new KonluluStreamGrabStateObject(
                                                         KonluluStreamGrabState.GetUpcomingStream,
