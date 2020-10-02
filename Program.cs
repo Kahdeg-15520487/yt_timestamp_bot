@@ -22,6 +22,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace discordbot
 {
@@ -58,7 +59,7 @@ namespace discordbot
                       {
                           builder.ClearProviders();
                           builder.AddConsole();
-                          builder.AddFile(APPLICATION_NAME + "-{Date}.txt");
+                          builder.AddFile(Path.Combine(Path.GetDirectoryName(Environment.CurrentDirectory), APPLICATION_NAME + "-{Date}.txt"));
                       })
                       .ConfigureWebHostDefaults(wb =>
                       {
