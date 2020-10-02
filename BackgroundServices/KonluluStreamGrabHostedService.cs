@@ -155,7 +155,7 @@ namespace discordbot.BackgroundServices
                                                     StateTimer(c, new KonluluStreamGrabStateObject(
                                                         KonluluStreamGrabState.GetUpcomingStream,
                                                         DateTime.UtcNow,
-                                                        DateTime.UtcNow.AddHours(1))
+                                                        DateTime.UtcNow.AddMinutes(30))
                                                     )
                                                 );
                                         }

@@ -64,7 +64,11 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task StartTag()
         {
-            if (!await tagService.StartTag())
+            if (await tagService.StartTag())
+            {
+                await base.ReplyAsync($"Start recording tag for {tagService.CurrentLiveStream.VideoId}");
+            }
+            else
             {
                 await base.ReplyAsync("Found no stream");
             }
