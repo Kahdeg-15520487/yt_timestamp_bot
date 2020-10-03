@@ -23,6 +23,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using discordbot.DAL;
 
 namespace discordbot
 {
@@ -104,7 +105,8 @@ namespace discordbot
                     .AddSingleton<CommandService>()
                     .AddSingleton<CommandHandler>()
 
-                    .AddSingleton<ILiteDatabase>(new LiteDatabase(configuration["_CONNSTR"]))
+                    .AddSingleton<LiteDbContext, LiteDbContext>()
+                    .Configure<LiteDbConfig>(options => options.ConnectionString = configuration["_CONNSTR"])
                     .AddTransient(typeof(IBaseRepository<>), typeof(BaseRepository<>))
                     .AddTransient<ITimeStampRepository, TimestampRepository>()
                     .AddTransient<IVideoRepository, VideoRepository>()

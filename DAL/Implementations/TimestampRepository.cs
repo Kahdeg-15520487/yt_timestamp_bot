@@ -12,6 +12,6 @@ namespace discordbot.DAL.Implementations
 {
     class TimestampRepository : BaseRepository<TimeStamp>, ITimeStampRepository
     {
-        public TimestampRepository(ILiteDatabase db) : base(db) { }
+        public TimestampRepository(LiteDbContext db) : base(db) { }
     }
 }

@@ -15,9 +15,9 @@ namespace discordbot.DAL.Implementations
     {
         protected readonly ILiteDatabase db;
 
-        public BaseRepository(ILiteDatabase db)
+        public BaseRepository(LiteDbContext db)
         {
-            this.db = db;
+            this.db = db.Context;
         }
 
         public virtual IEnumerable<T> GetAll()
@@ -40,6 +40,10 @@ namespace discordbot.DAL.Implementations
 
         public virtual ObjectId Save(T document)
         {
+            if (!db.BeginTrans())
+            {
+                throw new Exception("Already in a transaction");
+            }
             ILiteCollection<T> collection = db.GetCollection<T>();
             ObjectId result = null;
 
@@ -52,6 +56,7 @@ namespace discordbot.DAL.Implementations
                 collection.Update(document);
                 result = document.Id;
             }
+            db.Commit();
             return result;
         }
 
