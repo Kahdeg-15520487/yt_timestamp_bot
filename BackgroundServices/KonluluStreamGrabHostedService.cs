@@ -290,16 +290,16 @@ namespace discordbot.BackgroundServices
                                             logger.LogInformation("captured the end of {0}", video.VideoId);
                                         }
 
-                                        //taskQueue.QueueBackgroundWorkItem((c) =>
-                                        //            StateTimer(c, new KonluluStreamGrabStateObject(
-                                        //                KonluluStreamGrabState.GetUpcomingStream,
-                                        //                DateTime.UtcNow,
-                                        //                DateTime.UtcNow.AddSeconds(1))
-                                        //            {
-                                        //                VideoId = stateObj.VideoId
-                                        //            }
-                                        //            )
-                                        //        );
+                                        taskQueue.QueueBackgroundWorkItem((c) =>
+                                                    StateTimer(c, new KonluluStreamGrabStateObject(
+                                                        KonluluStreamGrabState.GetUpcomingStream,
+                                                        DateTime.UtcNow,
+                                                        DateTime.UtcNow.AddSeconds(1))
+                                                    {
+                                                        VideoId = stateObj.VideoId
+                                                    }
+                                                    )
+                                                );
 
                                         break;
                                     }
