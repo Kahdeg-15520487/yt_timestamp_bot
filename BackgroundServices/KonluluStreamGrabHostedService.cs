@@ -287,7 +287,7 @@ namespace discordbot.BackgroundServices
                                             IVideoRepository videoDb = scope.ServiceProvider.GetRequiredService<IVideoRepository>();
 
                                             videoDb.Save(new Video(video));
-                                            logger.LogInformation("waiting {0}", video.VideoId);
+                                            logger.LogInformation("captured the end of {0}", video.VideoId);
                                         }
 
                                         //taskQueue.QueueBackgroundWorkItem((c) =>

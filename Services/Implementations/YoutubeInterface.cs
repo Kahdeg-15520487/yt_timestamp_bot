@@ -172,10 +172,8 @@ namespace discordbot.Services
         {
             try
             {
-                VideosResource.ListRequest request = ytService.Videos.List("snippet,id,liveStreamingDetails");
+                VideosResource.ListRequest request = ytService.Videos.List("snippet,id,liveStreamingDetails,statistics");
                 request.Id = videoId;
-                request.Fields = "items(id,liveStreamingDetails(activeLiveChatId,concurrentViewers,scheduledStartTime,actualStartTime)," +
-                                 "snippet(channelId,channelTitle,description,liveBroadcastContent,publishedAt,thumbnails,title),statistics)";
                 VideoListResponse result = await request.ExecuteAsync();
                 Video livestream = result.Items.FirstOrDefault();
 
