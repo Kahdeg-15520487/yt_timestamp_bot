@@ -44,7 +44,8 @@ namespace discordbot.BackgroundServices
                                                         KonluluStreamGrabState.GetUpcomingStream,
                                                         DateTime.UtcNow,
                                                         DateTime.UtcNow.AddSeconds(1))
-                                                    )
+                                                    { IsStartup = true }
+                                                   )
                                                 );
             return base.StartAsync(cancellationToken);
         }
@@ -108,6 +109,7 @@ namespace discordbot.BackgroundServices
             public DateTime StateStart { get; private set; }
             public DateTime StateWaitUntil { get; private set; }
             public string VideoId { get; set; } = null;
+            public bool IsStartup { get; set; } = false;
         }
 
         internal enum KonluluStreamGrabState
@@ -152,11 +154,14 @@ namespace discordbot.BackgroundServices
                                         if (livestreamId == null)
                                         {
                                             logger.LogInformation("found no upcoming stream");
-                                            livestreamId = await ytInterface.GetLiveStream(ytService, "Live");
-                                            foundLivestream = livestreamId != null;
-                                            if (livestreamId == null)
+                                            if (stateObj.IsStartup)
                                             {
-                                                logger.LogInformation("found no live stream");
+                                                livestreamId = await ytInterface.GetLiveStream(ytService, "Live");
+                                                foundLivestream = livestreamId != null;
+                                                if (livestreamId == null)
+                                                {
+                                                    logger.LogInformation("found no live stream");
+                                                }
                                             }
                                         }
 
@@ -166,7 +171,7 @@ namespace discordbot.BackgroundServices
                                                     StateTimer(c, new KonluluStreamGrabStateObject(
                                                         KonluluStreamGrabState.GetUpcomingStream,
                                                         DateTime.UtcNow,
-                                                        DateTime.UtcNow.AddMinutes(30))
+                                                        DateTime.UtcNow.AddHours(1))
                                                     )
                                                 );
                                         }
