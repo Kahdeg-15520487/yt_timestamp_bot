@@ -13,10 +13,9 @@ namespace discordbot.DAL
     internal class LiteDbContext
     {
         public readonly ILiteDatabase Context;
-        private static int count = 0;
         public LiteDbContext(IOptions<LiteDbConfig> configs)
         {
-            Console.WriteLine(count++);
+            Console.WriteLine(configs.Value.ConnectionString);
             try
             {
                 LiteDatabase db = new LiteDatabase(configs.Value.ConnectionString);
