@@ -3,6 +3,7 @@
 using Microsoft.Extensions.Options;
 
 using System;
+using System.IO;
 
 namespace discordbot.DAL
 {
@@ -15,7 +16,7 @@ namespace discordbot.DAL
         public readonly ILiteDatabase Context;
         public LiteDbContext(IOptions<LiteDbConfig> configs)
         {
-            Console.WriteLine(configs.Value.ConnectionString);
+            Console.WriteLine(Path.GetFullPath(configs.Value.ConnectionString));
             try
             {
                 LiteDatabase db = new LiteDatabase(configs.Value.ConnectionString);
