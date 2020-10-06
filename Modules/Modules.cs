@@ -90,6 +90,13 @@ namespace discordbot.Modules
         }
 
         [Command("t")]
+        [Summary("tag current time temporarily")]
+        public async Task Tag()
+        {
+            await this.Tag("<empty>");
+        }
+
+        [Command("t")]
         [Summary("tag current time in livestream")]
         public async Task Tag([Summary("tag")][Remainder] string tag)
         {
