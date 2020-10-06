@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 
 using System;
 using System.IO;
+using System.Text;
 
 namespace discordbot.DAL
 {
@@ -17,11 +18,23 @@ namespace discordbot.DAL
         public LiteDbContext(IOptions<LiteDbConfig> configs)
         {
             Console.WriteLine(Path.GetFullPath(configs.Value.ConnectionString));
+
             try
             {
                 LiteDatabase db = new LiteDatabase(configs.Value.ConnectionString);
                 if (db != null)
+                {
                     Context = db;
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var collectionName in db.GetCollectionNames())
+                    {
+                        sb.AppendLine("=====");
+                        sb.AppendLine(collectionName);
+                        sb.AppendLine(JsonSerializer.Serialize(new BsonArray(db.GetCollection(collectionName).FindAll())));
+                        sb.AppendLine("=====");
+                    }
+                    File.WriteAllText(Guid.NewGuid().ToString(), sb.ToString());
+                }
             }
             catch (Exception ex)
             {
