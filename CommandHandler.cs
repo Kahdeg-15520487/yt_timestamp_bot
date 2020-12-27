@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,6 +57,7 @@ namespace discordbot
             // See Dependency Injection guide for more information.
             IEnumerable<ModuleInfo> modules = await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
                                             services: this.serviceProvider);
+
             StringBuilder sb = new StringBuilder();
             StringBuilder help = new StringBuilder();
             sb.AppendLine(Program.APPLICATION_NAME);
@@ -92,6 +94,8 @@ namespace discordbot
                 DiscordModule.HELP_STRING = help.ToString();
             }
             logger.LogInformation(sb.ToString());
+
+            var changeLogsRaw = File.ReadAllText("changelog.json");
         }
 
         //private async Task HandleReactionAddedCommandAsync(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)

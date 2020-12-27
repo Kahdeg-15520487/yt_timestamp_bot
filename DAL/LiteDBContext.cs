@@ -25,15 +25,15 @@ namespace discordbot.DAL
                 if (db != null)
                 {
                     Context = db;
-                    StringBuilder sb = new StringBuilder();
-                    foreach (var collectionName in db.GetCollectionNames())
-                    {
-                        sb.AppendLine("=====");
-                        sb.AppendLine(collectionName);
-                        sb.AppendLine(JsonSerializer.Serialize(new BsonArray(db.GetCollection(collectionName).FindAll())));
-                        sb.AppendLine("=====");
-                    }
-                    File.WriteAllText(Guid.NewGuid().ToString(), sb.ToString());
+                    //StringBuilder sb = new StringBuilder();
+                    //foreach (var collectionName in db.GetCollectionNames())
+                    //{
+                    //    sb.AppendLine("=====");
+                    //    sb.AppendLine(collectionName);
+                    //    sb.AppendLine(JsonSerializer.Serialize(new BsonArray(db.GetCollection(collectionName).FindAll())));
+                    //    sb.AppendLine("=====");
+                    //}
+                    //File.WriteAllText(Guid.NewGuid().ToString(), sb.ToString());
                 }
             }
             catch (Exception ex)

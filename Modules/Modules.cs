@@ -33,6 +33,7 @@ namespace discordbot.Modules
         private bool IsEdit = false;
 
         public static string HELP_STRING { get; internal set; } = string.Empty;
+        public static string VERSION_STRING { get; private set; } = string.Empty;
 
         internal DiscordModule(ILogger<DiscordModule> logger,
             YoutubeInterface ytService,
@@ -57,6 +58,14 @@ namespace discordbot.Modules
         public async Task PrintHelpAsync()
         {
             await base.ReplyAsync(DiscordModule.HELP_STRING);
+        }
+
+        [Command("version")]
+        [Summary("Get version")]
+        [NoEdit]
+        public async Task PrintChangeLogAsync()
+        {
+            await base.ReplyAsync(DiscordModule.VERSION_STRING);
         }
 
         [Command("start")]
@@ -114,11 +123,19 @@ namespace discordbot.Modules
 
         [Command("ct")]
         [Summary("tag in the past in livestream\n\t\t\tex: ct 30 words\n\t\t\twill tag \"words\" 30 seconds back")]
-        [NoEdit]
         public async Task Tag([Summary("time to subtract in seconds")] int seconds, [Summary("tag")][Remainder] string tag)
         {
-            tagService.AddTag(tag, Context.User.Id, Context.User.Username, Context.Message.Id, seconds);
-            logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {seconds} seconds");
+            if (IsEdit)
+            {
+                TimeStampDto oldTag = tagService.EditTag(Context.User.Id, Context.Message.Id, tag);
+                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
+
+            }
+            else
+            {
+                tagService.AddTag(tag, Context.User.Id, Context.User.Username, Context.Message.Id, seconds);
+                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {seconds} seconds");
+            }
         }
 
         [Command("backward")]
@@ -228,8 +245,11 @@ namespace discordbot.Modules
             }
             else
             {
-                await this.ReplyAsync($"No tags is registered for {videoId}");
-                return;
+                if (tagSegments.Count == 0)
+                {
+                    await this.ReplyAsync($"No tags is registered for {videoId}");
+                    return;
+                }
             }
 
             bool isFirst = true;
