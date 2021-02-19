@@ -3,7 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "discordbot", "discordbot.csproj", "{99D310D7-43AB-42B1-8138-3182356FCD2C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "discordbot", "yt_timestamp_bot\discordbot.csproj", "{99D310D7-43AB-42B1-8138-3182356FCD2C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker", "Docker", "{8F7FA86A-344F-4384-9079-9D419A287C42}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yaml = docker-compose.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{5C66B998-A0A7-4DDC-8475-FED1157B4CE7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nginx", "nginx", "{12BB993E-0C50-48E5-9E75-AA99D77178D0}"
+	ProjectSection(SolutionItems) = preProject
+		data\nginx\nginx.conf = data\nginx\nginx.conf
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,6 +30,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5C66B998-A0A7-4DDC-8475-FED1157B4CE7} = {8F7FA86A-344F-4384-9079-9D419A287C42}
+		{12BB993E-0C50-48E5-9E75-AA99D77178D0} = {5C66B998-A0A7-4DDC-8475-FED1157B4CE7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {891A7982-7E20-4B74-8BAD-0DD75E5E323A}

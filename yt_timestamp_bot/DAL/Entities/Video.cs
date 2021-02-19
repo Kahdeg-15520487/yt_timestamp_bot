@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace discordbot.DAL.Entities
 {
-    internal class Video
+    class Video
     {
+        public Video() { }
         public Video(VideoDto video)
         {
             this.VideoId = video.VideoId;

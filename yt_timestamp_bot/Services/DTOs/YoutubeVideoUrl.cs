@@ -31,8 +31,8 @@ namespace discordbot.Services.DTOs
             try
             {
                 Uri uri = new Uri(input);
-                Dictionary<string, StringValues> querryDict = QueryHelpers.ParseQuery(uri.Query);
-                string videoId = querryDict["v"];
+                Dictionary<string, StringValues> queryDict = QueryHelpers.ParseQuery(uri.Query);
+                string videoId = queryDict["v"];
 
                 YoutubeVideoUrl result = new YoutubeVideoUrl(videoId);
                 return Task.FromResult(TypeReaderResult.FromSuccess(result));

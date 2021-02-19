@@ -126,8 +126,8 @@ namespace discordbot.Services
             try
             {
                 var uri = new Uri(videoId);
-                var querryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
-                videoId = querryDict["v"];
+                var queryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+                videoId = queryDict["v"];
             }
             catch
             {

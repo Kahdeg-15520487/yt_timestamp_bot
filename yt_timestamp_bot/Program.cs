@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using discordbot.DAL;
+using discordbot.Services.Implementations;
 
 namespace discordbot
 {
@@ -60,7 +61,7 @@ namespace discordbot
                       {
                           builder.ClearProviders();
                           builder.AddConsole();
-                          builder.AddFile(Path.Combine(Path.GetDirectoryName(Environment.CurrentDirectory), APPLICATION_NAME + "-{Date}.txt"));
+                          builder.AddFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal, Environment.SpecialFolderOption.None), "log", APPLICATION_NAME, APPLICATION_NAME + "-{Date}.txt"));
                       })
                       .ConfigureWebHostDefaults(wb =>
                       {
@@ -111,6 +112,7 @@ namespace discordbot
                     .AddTransient<ITimeStampRepository, TimestampRepository>()
                     .AddTransient<IVideoRepository, VideoRepository>()
                     .AddTransient<ITagService, TagService>()
+                    .AddTransient<IVideoService, VideoService>()
                     .AddTransient<IVideoRepository, VideoRepository>()
                     .AddTransient<YoutubeInterface>()
 

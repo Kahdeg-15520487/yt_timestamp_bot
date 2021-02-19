@@ -1,0 +1,33 @@
+﻿version: "3.7"
+
+services:
+
+  reverseproxy:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data/nginx:/etc/nginx/config.d
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    restart: always
+
+  api:
+    env_file:
+      - discordbot.env
+    depends_on:
+      - reverseproxy
+    build:
+      context: ./yt_timestamp_bot
+      dockerfile: Dockerfile
+    expose:
+      - "5000"
+    restart: always
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"

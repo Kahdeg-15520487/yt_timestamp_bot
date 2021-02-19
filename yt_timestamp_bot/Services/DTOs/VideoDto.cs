@@ -1,4 +1,6 @@
-﻿using System;
+﻿using discordbot.DAL.Entities;
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,10 +8,20 @@ namespace discordbot.Services.DTOs
 {
     public class VideoDto
     {
+        public VideoDto() { }
+        internal VideoDto(Video vd)
+        {
+            VideoId = vd.VideoId;
+            StartTime = vd.StartTime;
+            EndTime = vd.EndTime;
+        }
+
         public string VideoId { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public bool IsLive => DateTime.UtcNow > StartTime && DateTime.UtcNow < EndTime;
+
+        public IEnumerable<TimeStampDto> TimeStamps { get; set; } = null;
 
         public override string ToString()
         {
