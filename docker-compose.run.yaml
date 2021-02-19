@@ -1,0 +1,23 @@
+﻿version: "3.7"
+
+services:
+
+  reverseproxy:
+    build:
+      context: ./nginx
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "80:80"
+    restart: always
+
+  api:
+    env_file:
+      - discordbot.env #fillin the variable in the discordbot.env.sample and rename the file
+    depends_on:
+      - reverseproxy
+    image: kahdeg/yt_timestamp_bot:latest
+    volumes:
+      - $HOME/yt_ts_docker:/etc/yt_ts
+    expose:
+      - "5000"
+    restart: always
