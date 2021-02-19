@@ -9,6 +9,7 @@ namespace discordbot.Services.Interfaces
 {
     public interface IVideoService
     {
+        IEnumerable<VideoDto> ListVideos();
         VideoDto GetVideo(string videoId);
         IEnumerable<TimeStampDto> GetTimeStamps(string videoId);
     }
