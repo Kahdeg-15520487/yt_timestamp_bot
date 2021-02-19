@@ -1,0 +1,21 @@
+﻿version: "3.7"
+
+services:
+
+  reverseproxy:
+    build:
+      context: ./Nginx
+      dockerfile: Nginx.Dockerfile
+    ports:
+      - "80:80"
+    restart: always
+
+  api:
+    depends_on:
+      - reverseproxy
+    build:
+      context: ./HelloAspNetCore3.Api
+      dockerfile: Api.Dockerfile
+    expose:
+      - "5000"
+    restart: always

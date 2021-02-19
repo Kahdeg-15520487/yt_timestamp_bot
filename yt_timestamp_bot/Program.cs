@@ -60,7 +60,7 @@ namespace discordbot
                       {
                           builder.ClearProviders();
                           builder.AddConsole();
-                          builder.AddFile(Path.Combine(Path.GetDirectoryName(Environment.CurrentDirectory), APPLICATION_NAME + "-{Date}.txt"));
+                          builder.AddFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal, Environment.SpecialFolderOption.None), "log", APPLICATION_NAME, APPLICATION_NAME + "-{Date}.txt"));
                       })
                       .ConfigureWebHostDefaults(wb =>
                       {
