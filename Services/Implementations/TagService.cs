@@ -124,21 +124,21 @@ namespace discordbot.Services
         {
             videoId = videoId == null ? currentLiveStream.VideoId : ytInterface.GetVideoId(videoId).Result;
 
-            IEnumerable<TimeStampDto> querry = tsDb.Query(ts => ts.VideoId.Equals(videoId))
+            IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId))
                            .OrderBy(ts => ts.Time)
                            .Select(ts => new TimeStampDto(ts));
 
-            return querry.ToList();
+            return query.ToList();
         }
 
         public List<TimeStampDto> ListTag(string videoId, ulong userId)
         {
             videoId = videoId == null ? currentLiveStream.VideoId : ytInterface.GetVideoId(videoId).Result;
 
-            IEnumerable<TimeStampDto> querry = tsDb.Query(ts => ts.VideoId.Equals(videoId) && ts.UserId == userId)
+            IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId) && ts.UserId == userId)
                            .OrderBy(ts => ts.Time)
                            .Select(ts => new TimeStampDto(ts));
-            return querry.ToList();
+            return query.ToList();
         }
 
         public TimeStampDto AddTag(string tagContent, ulong userId, string userName, ulong messageId, int second = 0)

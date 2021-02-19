@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace discordbot.DAL.Entities
 {
-    internal class Video
+    class Video
     {
         public Video(VideoDto video)
         {

@@ -30,9 +30,17 @@ namespace discordbot.Controllers
             this.tagService = tagService;
         }
 
-        public async Task<IActionResult> ListVideo(){
-            
+        [HttpGet("{videoId}")]
+        public IEnumerable<TimeStampDto> Get(string videoId)
+        {
+            return tagService.ListTag(videoId);
         }
+
+        //[HttpPost("{videoId}")]
+        //public string Post(string videoId)
+        //{
+        //    tagService.ad
+        //}
 
         //[HttpPost("bulk")]
         //public async Task<string> Upload()

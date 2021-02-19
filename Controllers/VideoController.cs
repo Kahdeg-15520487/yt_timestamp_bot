@@ -18,15 +18,23 @@ namespace discordbot.Controllers
     [Route("api/[controller]")]
     public class VideoController : ControllerBase
     {
-        private readonly ITagService tagService;
+        private readonly IVideoService videoService;
 
-        public TagController(ITagService tagService)
+        public VideoController(IVideoService videoService)
         {
-            this.tagService = tagService;
+            this.videoService = videoService;
         }
 
-        public async Task<IActionResult> ListVideo(){
-            
+        [HttpGet]
+        public IEnumerable<VideoDto> ListVideo()
+        {
+            return videoService.ListVideos();
+        }
+
+        [HttpGet("{videoId}")]
+        public VideoDto GetVideo(string videoId)
+        {
+            return videoService.GetVideo(videoId);
         }
     }
 }
