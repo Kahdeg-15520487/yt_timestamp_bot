@@ -363,3 +363,5 @@ vid_info.json
 yt_ts-*.txt
 
 Properties/launch.json
+
+.env
