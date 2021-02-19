@@ -10,10 +10,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker", "Docker", "{8F7FA8
 		docker-compose.yaml = docker-compose.yaml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nginx", "Nginx", "{83DA9EE2-C17C-400C-9FF7-670C4D5A5205}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{5C66B998-A0A7-4DDC-8475-FED1157B4CE7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nginx", "nginx", "{12BB993E-0C50-48E5-9E75-AA99D77178D0}"
 	ProjectSection(SolutionItems) = preProject
-		nginx\nginx.conf = nginx\nginx.conf
-		nginx\nginx.Dockerfile = nginx\nginx.Dockerfile
+		data\nginx\nginx.conf = data\nginx\nginx.conf
 	EndProjectSection
 EndProject
 Global
@@ -31,7 +32,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{83DA9EE2-C17C-400C-9FF7-670C4D5A5205} = {8F7FA86A-344F-4384-9079-9D419A287C42}
+		{5C66B998-A0A7-4DDC-8475-FED1157B4CE7} = {8F7FA86A-344F-4384-9079-9D419A287C42}
+		{12BB993E-0C50-48E5-9E75-AA99D77178D0} = {5C66B998-A0A7-4DDC-8475-FED1157B4CE7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {891A7982-7E20-4B74-8BAD-0DD75E5E323A}
