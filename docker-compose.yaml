@@ -14,8 +14,8 @@ services:
     depends_on:
       - reverseproxy
     build:
-      context: ./HelloAspNetCore3.Api
-      dockerfile: Api.Dockerfile
+      context: ./yt_timestamp_bot
+      dockerfile: Dockerfile
     expose:
       - "5000"
     restart: always

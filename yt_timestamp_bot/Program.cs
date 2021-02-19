@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using discordbot.DAL;
+using discordbot.Services.Implementations;
 
 namespace discordbot
 {
@@ -111,6 +112,7 @@ namespace discordbot
                     .AddTransient<ITimeStampRepository, TimestampRepository>()
                     .AddTransient<IVideoRepository, VideoRepository>()
                     .AddTransient<ITagService, TagService>()
+                    .AddTransient<IVideoService, VideoService>()
                     .AddTransient<IVideoRepository, VideoRepository>()
                     .AddTransient<YoutubeInterface>()
 

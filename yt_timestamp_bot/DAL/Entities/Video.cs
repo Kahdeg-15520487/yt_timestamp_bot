@@ -9,6 +9,7 @@ namespace discordbot.DAL.Entities
 {
     class Video
     {
+        public Video() { }
         public Video(VideoDto video)
         {
             this.VideoId = video.VideoId;
