@@ -1,15 +1,11 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
-
-using discordbot;
 using discordbot.BackgroundServices;
 using discordbot.DAL.Entities;
 using discordbot.DAL.Implementations;
 using discordbot.DAL.Interfaces;
 using discordbot.Services;
 using discordbot.Services.Interfaces;
-
-using discordbot.BackgroundServices;
 
 using LiteDB;
 
@@ -34,6 +30,7 @@ namespace discordbot
      * yt_ts_CONNSTR
      * yt_ts_APIKEY
      * yt_ts_PREFIX
+     * yt_ts_LOG
      */
 
     class Program
@@ -49,19 +46,25 @@ namespace discordbot
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
         public async Task MainAsync(string[] args)
         {
             await Host.CreateDefaultBuilder(args)
+                      .ConfigureAppConfiguration((hostingContext, builder) =>
+                      {
+                          builder.AddJsonFile($"appsettings.json", true, true);
+                          builder.AddEnvironmentVariables(prefix: APPLICATION_NAME);
+                      })
                       .ConfigureServices(ConfigureServices)
                       .ConfigureLogging((hostContext, builder) =>
                       {
                           builder.ClearProviders();
                           builder.AddConsole();
-                          builder.AddFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal, Environment.SpecialFolderOption.None), "log", APPLICATION_NAME, APPLICATION_NAME + "-{Date}.txt"));
+                          builder.AddFile(Path.Combine(hostContext.Configuration["_LOG"], APPLICATION_NAME + "-{Date}.txt"));
                       })
                       .ConfigureWebHostDefaults(wb =>
                       {
@@ -72,36 +75,13 @@ namespace discordbot
                               });
                       })
                       .RunConsoleAsync();
-
-            //await new HostBuilder()
-            //          .ConfigureServices(ConfigureServices)
-            //          .ConfigureLogging((hostContext, builder) =>
-            //          {
-            //              builder.ClearProviders();
-            //              builder.AddConsole();
-            //              builder.AddFile(APPLICATION_NAME + "-{Date}.txt");
-            //          })
-            //          .RunConsoleAsync();
-        }
-
-        private static IConfiguration configuration;
-
-        private static IConfiguration LoadConfiguration()
-        {
-            string env = Environment.GetEnvironmentVariable(APPLICATION_NAME + "_ENVIRONMENT");
-
-            IConfigurationBuilder builder = new ConfigurationBuilder()
-                              .AddJsonFile($"appsettings.json", true, true)
-                              .AddEnvironmentVariables(APPLICATION_NAME);
-            return builder.Build();
         }
 
         private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
         {
-            configuration = LoadConfiguration();
+            IConfiguration configuration = context.Configuration;
 
-            services.AddSingleton<IConfiguration>(configuration)
-                    .AddHttpClient()
+            services.AddHttpClient()
                     .AddSingleton<DiscordSocketClient>()
                     .AddSingleton<CommandService>()
                     .AddSingleton<CommandHandler>()
