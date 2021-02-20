@@ -66,8 +66,17 @@ namespace discordbot.Services.Implementations
             using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
                 IVideoRepository videoDb = scope.ServiceProvider.GetRequiredService<IVideoRepository>();
-                IEnumerable<VideoDto> query = videoDb.GetAll().OrderBy(vd => vd.StartTime).Select(vd => new VideoDto(vd));
-                return query.ToList();
+                List<VideoDto> query = videoDb.GetAll().OrderBy(vd => vd.StartTime).Select(vd => new VideoDto(vd)).ToList();
+
+
+                ITimeStampRepository tsDb = scope.ServiceProvider.GetRequiredService<ITimeStampRepository>();
+                return query.Select(vdto =>
+                {
+                    vdto.TimeStamps = tsDb.Query(ts => ts.VideoId.Equals(vdto.VideoId))
+                                          .OrderBy(ts => ts.Time)
+                                          .Select(ts => new TimeStampDto(ts));
+                    return vdto;
+                });
             }
         }
     }
