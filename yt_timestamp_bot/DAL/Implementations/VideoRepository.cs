@@ -14,9 +14,14 @@ namespace discordbot.DAL.Implementations
     class VideoRepository : IVideoRepository
     {
         private readonly ILiteDatabase db;
-        public VideoRepository(LiteDbContext db)
+        public VideoRepository(LiteDBContextFactory dbFactory)
         {
-            this.db = db.Context;
+            this.db = dbFactory.GetDatabase();
+        }
+
+        ~VideoRepository()
+        {
+            this.db.Dispose();
         }
 
         public IEnumerable<Video> GetAll()

@@ -12,19 +12,31 @@ namespace discordbot.DAL
     {
         public string ConnectionString { get; set; }
     }
-    internal class LiteDbContext
+    internal class LiteDBContextFactory
     {
-        public readonly ILiteDatabase Context;
-        public LiteDbContext(IOptions<LiteDbConfig> configs)
+        private readonly IOptions<LiteDbConfig> configs;
+        private LiteDatabase db = null;
+        public LiteDBContextFactory(IOptions<LiteDbConfig> configs)
         {
+            this.configs = configs;
+        }
+
+        public ILiteDatabase GetDatabase()
+        {
+            Console.Write((new System.Diagnostics.StackTrace()).GetFrame(1).GetMethod().DeclaringType?.Name ?? "unknown");
+            Console.Write(" requested db: ");
             Console.WriteLine(Path.GetFullPath(configs.Value.ConnectionString));
 
             try
             {
-                LiteDatabase db = new LiteDatabase(configs.Value.ConnectionString);
+                if (this.db != null)
+                {
+                    this.db.Dispose();
+                }
+                this.db = new LiteDatabase(configs.Value.ConnectionString);
                 if (db != null)
                 {
-                    Context = db;
+                    return db;
                     //StringBuilder sb = new StringBuilder();
                     //foreach (var collectionName in db.GetCollectionNames())
                     //{
@@ -34,6 +46,10 @@ namespace discordbot.DAL
                     //    sb.AppendLine("=====");
                     //}
                     //File.WriteAllText(Guid.NewGuid().ToString(), sb.ToString());
+                }
+                else
+                {
+                    throw new NullReferenceException(nameof(LiteDatabase));
                 }
             }
             catch (Exception ex)

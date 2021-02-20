@@ -86,7 +86,7 @@ namespace discordbot
                     .AddSingleton<CommandService>()
                     .AddSingleton<CommandHandler>()
 
-                    .AddSingleton<LiteDbContext, LiteDbContext>()
+                    .AddSingleton<LiteDBContextFactory, LiteDBContextFactory>()
                     .Configure<LiteDbConfig>(options => options.ConnectionString = configuration["_CONNSTR"])
                     .AddTransient(typeof(IBaseRepository<>), typeof(BaseRepository<>))
                     .AddTransient<ITimeStampRepository, TimestampRepository>()
