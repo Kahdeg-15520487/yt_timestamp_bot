@@ -9,6 +9,7 @@ using Google.Apis.YouTube.v3;
 
 using LiteDB;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using System;
@@ -22,38 +23,52 @@ namespace discordbot.Services.Implementations
 {
     class VideoService : IVideoService
     {
-        private readonly ITimeStampRepository tsDb;
-        private readonly IVideoRepository videoDb;
+        private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ILogger<VideoService> logger;
 
-        public VideoService(ITimeStampRepository tsDb, IVideoRepository videoDb, ILogger<VideoService> logger)
+        public VideoService(IServiceScopeFactory serviceScopeFactory, ILogger<VideoService> logger)
         {
-            this.tsDb = tsDb;
-            this.videoDb = videoDb;
+            this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
         }
 
         public IEnumerable<TimeStampDto> GetTimeStamps(string videoId)
         {
-            IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId))
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
+            {
+                ITimeStampRepository tsDb = scope.ServiceProvider.GetRequiredService<ITimeStampRepository>();
+                IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId))
                            .OrderBy(ts => ts.Time)
                            .Select(ts => new TimeStampDto(ts));
 
-            return query.ToList();
+                return query.ToList();
+            }
         }
 
         public VideoDto GetVideo(string videoId)
         {
-            Video entity = videoDb.Query(vd => vd.VideoId.Equals(videoId)).FirstOrDefault();
-            VideoDto dto = new VideoDto(entity);
-            dto.TimeStamps = GetTimeStamps(videoId);
-            return dto;
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
+            {
+                IVideoRepository videoDb = scope.ServiceProvider.GetRequiredService<IVideoRepository>();
+                Video entity = videoDb.Query(vd => vd.VideoId.Equals(videoId)).FirstOrDefault();
+                if (entity == null)
+                {
+                    return null;
+                }
+                VideoDto dto = new VideoDto(entity);
+                dto.TimeStamps = GetTimeStamps(videoId);
+                return dto;
+            }
         }
 
         public IEnumerable<VideoDto> ListVideos()
         {
-            IEnumerable<VideoDto> query = videoDb.GetAll().OrderBy(vd => vd.StartTime).Select(vd => new VideoDto(vd));
-            return query.ToList();
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
+            {
+                IVideoRepository videoDb = scope.ServiceProvider.GetRequiredService<IVideoRepository>();
+                IEnumerable<VideoDto> query = videoDb.GetAll().OrderBy(vd => vd.StartTime).Select(vd => new VideoDto(vd));
+                return query.ToList();
+            }
         }
     }
 }

@@ -32,9 +32,17 @@ namespace discordbot.Controllers
         }
 
         [HttpGet("{videoId}")]
-        public VideoDto GetVideo(string videoId)
+        public IActionResult GetVideo(string videoId)
         {
-            return videoService.GetVideo(videoId);
+            VideoDto dto = videoService.GetVideo(videoId);
+            if (dto == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return Ok(dto);
+            }
         }
     }
 }

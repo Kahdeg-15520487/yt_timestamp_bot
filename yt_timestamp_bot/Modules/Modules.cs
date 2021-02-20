@@ -8,6 +8,7 @@ using discordbot.Services;
 using discordbot.Services.DTOs;
 using discordbot.Services.Interfaces;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using System;
@@ -28,7 +29,7 @@ namespace discordbot.Modules
 
         private readonly ILogger<DiscordModule> logger;
         private readonly YoutubeInterface ytService;
-        private readonly ITagService tagService;
+        private readonly IServiceScopeFactory serviceScopeFactory;
 
         private bool IsEdit = false;
 
@@ -37,11 +38,11 @@ namespace discordbot.Modules
 
         internal DiscordModule(ILogger<DiscordModule> logger,
             YoutubeInterface ytService,
-            ITagService tagService)
+            IServiceScopeFactory serviceScopeFactory)
         {
             this.logger = logger;
             this.ytService = ytService;
-            this.tagService = tagService;
+            this.serviceScopeFactory = serviceScopeFactory;
             logger.LogInformation("Loaded default Module");
         }
 
@@ -73,13 +74,17 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task StartTag()
         {
-            if (await tagService.StartTag())
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                await base.ReplyAsync($"Start recording tag for {tagService.CurrentLiveStream.VideoId}");
-            }
-            else
-            {
-                await base.ReplyAsync("Found no stream");
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                if (await tagService.StartTag())
+                {
+                    await base.ReplyAsync($"Start recording tag for {tagService.CurrentLiveStream.VideoId}");
+                }
+                else
+                {
+                    await base.ReplyAsync("Found no stream");
+                }
             }
         }
 
@@ -88,13 +93,17 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task StartTag([Summary("videoId")] string videoId)
         {
-            if (await tagService.StartTag(videoId))
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                await base.ReplyAsync($"Start recording tag for {videoId}");
-            }
-            else
-            {
-                await base.ReplyAsync("Found no stream");
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                if (await tagService.StartTag(videoId))
+                {
+                    await base.ReplyAsync($"Start recording tag for {videoId}");
+                }
+                else
+                {
+                    await base.ReplyAsync("Found no stream");
+                }
             }
         }
 
@@ -109,15 +118,19 @@ namespace discordbot.Modules
         [Summary("tag current time in livestream")]
         public async Task Tag([Summary("tag")][Remainder] string tag)
         {
-            if (IsEdit)
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                TimeStampDto oldTag = tagService.EditTag(Context.User.Id, Context.Message.Id, tag);
-                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
-            }
-            else
-            {
-                tagService.AddTag(tag, Context.User.Id, Context.User.Username, Context.Message.Id);
-                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag}");
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                if (IsEdit)
+                {
+                    TimeStampDto oldTag = tagService.EditTag(Context.User.Id, Context.Message.Id, tag);
+                    logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
+                }
+                else
+                {
+                    tagService.AddTag(tag, Context.User.Id, Context.User.Username, Context.Message.Id);
+                    logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag}");
+                }
             }
         }
 
@@ -125,16 +138,20 @@ namespace discordbot.Modules
         [Summary("tag in the past in livestream\n\t\t\tex: ct 30 words\n\t\t\twill tag \"words\" 30 seconds back")]
         public async Task Tag([Summary("time to subtract in seconds")] int seconds, [Summary("tag")][Remainder] string tag)
         {
-            if (IsEdit)
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                TimeStampDto oldTag = tagService.EditTag(Context.User.Id, Context.Message.Id, tag);
-                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                if (IsEdit)
+                {
+                    TimeStampDto oldTag = tagService.EditTag(Context.User.Id, Context.Message.Id, tag);
+                    logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
 
-            }
-            else
-            {
-                tagService.AddTag(tag, Context.User.Id, Context.User.Username, Context.Message.Id, seconds);
-                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {seconds} seconds");
+                }
+                else
+                {
+                    tagService.AddTag(tag, Context.User.Id, Context.User.Username, Context.Message.Id, seconds);
+                    logger.LogInformation($"{Context.User.Id}|{Context.User.Username} tagged {tag} with backtrack of {seconds} seconds");
+                }
             }
         }
 
@@ -144,11 +161,15 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task ShiftTagBackward([Summary("time to shift")] int x, [Summary("videoId")] string videoId)
         {
-            if (!tagService.IsLive)
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                return;
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                if (!tagService.IsLive)
+                {
+                    return;
+                }
+                await this.ShiftTagForward(-x, tagService.CurrentLiveStream.VideoId);
             }
-            await this.ShiftTagForward(-x, tagService.CurrentLiveStream.VideoId);
         }
 
         [Command("forward")]
@@ -157,18 +178,22 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task ShiftTagForward([Summary("time to shift")] int x, [Summary("videoId")] string videoId)
         {
-            try
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                tagService.ShiftTag(x, videoId);
-                await ReplyAsync($"Shifted {x} seconds {(x > 0 ? "forward" : "backward")} for video {Utility.GetYoutubeUrl(videoId)}");
-            }
-            catch (KeyNotFoundException knfex)
-            {
-                await ReplyAsync($"Video not found");
-            }
-            catch (Exception ex)
-            {
-                await ReplyAsync($"Can't shift tag time for {videoId}");
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                try
+                {
+                    tagService.ShiftTag(x, videoId);
+                    await ReplyAsync($"Shifted {x} seconds {(x > 0 ? "forward" : "backward")} for video {Utility.GetYoutubeUrl(videoId)}");
+                }
+                catch (KeyNotFoundException knfex)
+                {
+                    await ReplyAsync($"Video not found");
+                }
+                catch (Exception ex)
+                {
+                    await ReplyAsync($"Can't shift tag time for {videoId}");
+                }
             }
         }
 
@@ -177,20 +202,24 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task ListTag()
         {
-            if (tagService.CurrentLiveStream == null)
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                await ReplyAsync($"No stream is captured!");
-                return;
-            }
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                if (tagService.CurrentLiveStream == null)
+                {
+                    await ReplyAsync($"No stream is captured!");
+                    return;
+                }
 
-            try
-            {
-                await this.ListTag(tagService.CurrentLiveStream.VideoId);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, nameof(ListTag));
-                await this.ReplyAsync($"Error when listing tags for {tagService.CurrentLiveStream.VideoId}");
+                try
+                {
+                    await this.ListTag(tagService.CurrentLiveStream.VideoId);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, nameof(ListTag));
+                    await this.ReplyAsync($"Error when listing tags for {tagService.CurrentLiveStream.VideoId}");
+                }
             }
         }
 
@@ -199,14 +228,18 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task ListTag([Summary("videoId")] string videoId)
         {
-            List<TimeStampDto> timeStamps = tagService.ListTag(videoId);
-            if (timeStamps.Count == 0)
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                await this.ReplyAsync($"No tags is registered for {videoId}");
-                return;
-            }
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                List<TimeStampDto> timeStamps = tagService.ListTag(videoId);
+                if (timeStamps.Count == 0)
+                {
+                    await this.ReplyAsync($"No tags is registered for {videoId}");
+                    return;
+                }
 
-            await RenderList(timeStamps, videoId);
+                await RenderList(timeStamps, videoId);
+            }
         }
 
         [Command("listmine")]
@@ -214,13 +247,17 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task ListMineTag([Summary("videoId")] string videoId)
         {
-            List<TimeStampDto> timeStamps = tagService.ListTag(videoId, Context.User.Id);
-            if (timeStamps.Count == 0)
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
-                await this.ReplyAsync($"No tags is registered for {videoId}");
-            }
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                List<TimeStampDto> timeStamps = tagService.ListTag(videoId, Context.User.Id);
+                if (timeStamps.Count == 0)
+                {
+                    await this.ReplyAsync($"No tags is registered for {videoId}");
+                }
 
-            await RenderList(timeStamps, videoId, Context.User.Username);
+                await RenderList(timeStamps, videoId, Context.User.Username);
+            }
         }
 
         private async Task RenderList(List<TimeStampDto> timeStamps, string videoId, string username = null)
@@ -279,8 +316,12 @@ namespace discordbot.Modules
         [NoEdit]
         public async Task EditTag([Summary("tag")][Remainder] string tag)
         {
-            TimeStampDto oldTag = tagService.EditTag(Context.User.Id, tag);
-            logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
+            using (IServiceScope scope = serviceScopeFactory.CreateScope())
+            {
+                ITagService tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+                TimeStampDto oldTag = tagService.EditTag(Context.User.Id, tag);
+                logger.LogInformation($"{Context.User.Id}|{Context.User.Username} edited \"{oldTag.TagContent}\" to \"{tag}\"");
+            }
         }
 
         private SocketUser GetUserFromContext()

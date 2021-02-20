@@ -15,9 +15,14 @@ namespace discordbot.DAL.Implementations
     {
         protected readonly ILiteDatabase db;
 
-        public BaseRepository(LiteDbContext db)
+        public BaseRepository(LiteDBContextFactory dbFactory)
         {
-            this.db = db.Context;
+            this.db = dbFactory.GetDatabase();
+        }
+
+        ~BaseRepository()
+        {
+            this.db.Dispose();
         }
 
         public virtual IEnumerable<T> GetAll()
