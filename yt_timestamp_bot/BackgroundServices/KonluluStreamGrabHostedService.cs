@@ -178,18 +178,34 @@ namespace discordbot.BackgroundServices
                                         else
                                         {
                                             logger.LogInformation($"found upcoming stream {livestreamId}");
-                                            VideoDto video = await ytInterface.GetVideoInfo(ytService, livestreamId, true);
+                                            VideoDto video = await ytInterface.GetVideoInfo(ytService, livestreamId, getScheduledTime: true);
 
-                                            taskQueue.QueueBackgroundWorkItem((c) =>
+                                            if (video == null)
+                                            {
+                                                taskQueue.QueueBackgroundWorkItem((c) =>
                                                     StateTimer(c, new KonluluStreamGrabStateObject(
-                                                        KonluluStreamGrabState.WaitForTheUpcomingStream,
+                                                        KonluluStreamGrabState.GetUpcomingStream,
                                                         DateTime.UtcNow,
-                                                        video.StartTime)
+                                                        DateTime.UtcNow.AddMinutes(20))
                                                     {
-                                                        VideoId = livestreamId
+                                                        VideoId = stateObj.VideoId
                                                     }
                                                     )
                                                 );
+                                            }
+                                            else
+                                            {
+                                                taskQueue.QueueBackgroundWorkItem((c) =>
+                                                        StateTimer(c, new KonluluStreamGrabStateObject(
+                                                            KonluluStreamGrabState.WaitForTheUpcomingStream,
+                                                            DateTime.UtcNow,
+                                                            video.StartTime)
+                                                        {
+                                                            VideoId = livestreamId
+                                                        }
+                                                        )
+                                                    );
+                                            }
                                         }
                                         break;
                                     }
@@ -214,6 +230,19 @@ namespace discordbot.BackgroundServices
                                         try
                                         {
                                             video = await ytInterface.GetVideoInfo(ytService, stateObj.VideoId);
+                                            if (video == null)
+                                            {
+                                                taskQueue.QueueBackgroundWorkItem((c) =>
+                                                    StateTimer(c, new KonluluStreamGrabStateObject(
+                                                        KonluluStreamGrabState.GetUpcomingStream,
+                                                        DateTime.UtcNow,
+                                                        DateTime.UtcNow.AddMinutes(20))
+                                                    {
+                                                        VideoId = stateObj.VideoId
+                                                    }
+                                                    )
+                                                );
+                                            }
                                         }
                                         catch (StartCapturingTooSoonException)
                                         {
@@ -266,6 +295,19 @@ namespace discordbot.BackgroundServices
                                         try
                                         {
                                             video = await ytInterface.GetVideoInfo(ytService, stateObj.VideoId, getActualEndTime: true);
+                                            if (video == null)
+                                            {
+                                                taskQueue.QueueBackgroundWorkItem((c) =>
+                                                    StateTimer(c, new KonluluStreamGrabStateObject(
+                                                        KonluluStreamGrabState.GetUpcomingStream,
+                                                        DateTime.UtcNow,
+                                                        DateTime.UtcNow.AddMinutes(20))
+                                                    {
+                                                        VideoId = stateObj.VideoId
+                                                    }
+                                                    )
+                                                );
+                                            }
                                         }
                                         catch (NoActualEndtimeException)
                                         {
