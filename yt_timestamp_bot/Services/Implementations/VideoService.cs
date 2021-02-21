@@ -66,8 +66,23 @@ namespace discordbot.Services.Implementations
             using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
                 IVideoRepository videoDb = scope.ServiceProvider.GetRequiredService<IVideoRepository>();
+                YoutubeInterface ytInterface = scope.ServiceProvider.GetRequiredService<YoutubeInterface>();
+                YouTubeService ytService = ytInterface.GetYoutubeService();
+
                 List<VideoDto> query = videoDb.GetAll().OrderBy(vd => vd.StartTime).Select(vd => new VideoDto(vd)).ToList();
 
+                //foreach (Video v in videoDb.GetAll())
+                //{
+                //    VideoDto video = ytInterface.GetVideoInfo(ytService, v.VideoId).Result;
+                //    if (video == null)
+                //    {
+                //        logger.LogWarning("{0} is not available", v.VideoId);
+                //        continue;
+                //    }
+                //    v.VideoTitle = video.VideoTitle;
+                //    v.Misc = video.Misc;
+                //    videoDb.Save(v);
+                //}
 
                 ITimeStampRepository tsDb = scope.ServiceProvider.GetRequiredService<ITimeStampRepository>();
                 return query.Select(vdto =>

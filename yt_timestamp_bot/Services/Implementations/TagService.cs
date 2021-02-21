@@ -59,6 +59,11 @@ namespace discordbot.Services.Implementations
                 try
                 {
                     currentLiveStream = await ytInterface.GetVideoInfo(ytService, livestreamId);
+                    if (currentLiveStream == null)
+                    {
+                        logger.LogWarning("{0} is not available", livestreamId);
+                        return false;
+                    }
                 }
                 catch (StartCapturingTooSoonException ex)
                 {
@@ -95,6 +100,10 @@ namespace discordbot.Services.Implementations
             try
             {
                 currentLiveStream = await ytInterface.GetVideoInfo(ytService, currentLiveStream.VideoId);
+                if (currentLiveStream == null)
+                {
+                    logger.LogWarning("{0} is not available", currentLiveStream.VideoId);
+                }
             }
             catch (StartCapturingTooSoonException ex)
             {

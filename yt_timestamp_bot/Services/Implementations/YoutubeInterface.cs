@@ -177,6 +177,11 @@ namespace discordbot.Services
                 VideoListResponse result = await request.ExecuteAsync();
                 Video livestream = result.Items.FirstOrDefault();
 
+                if (livestream == null)
+                {
+                    return null;
+                }
+
                 DateTime startTime = default;
                 DateTime endTime = default;
 
@@ -201,8 +206,10 @@ namespace discordbot.Services
                 return new VideoDto()
                 {
                     VideoId = livestream?.Id,
+                    VideoTitle = livestream.Snippet.Title,
+                    Misc = JsonConvert.SerializeObject(livestream),
                     StartTime = startTime,
-                    EndTime = endTime
+                    EndTime = endTime,
                 };
             }
             catch (Exception ex)
