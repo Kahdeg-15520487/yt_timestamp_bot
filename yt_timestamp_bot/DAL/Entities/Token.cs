@@ -1,14 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using discordbot.DAL.Infrastructure.Interfaces;
+
+using Newtonsoft.Json;
 
 namespace discordbot.DAL.Entities
 {
-    class Token : BaseEntity
+    class Token : TValue
     {
         public string Name { get; set; }
         public string Hash { get; set; }
         public string Salt { get; set; }
+
+        [JsonIgnore]
+        public string Key => Name;
+
+        [JsonIgnore]
+        public object Value => this;
     }
 }

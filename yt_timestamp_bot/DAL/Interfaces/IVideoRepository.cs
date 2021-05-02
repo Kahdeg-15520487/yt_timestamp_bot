@@ -6,15 +6,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace discordbot.DAL.Interfaces
 {
-    interface IVideoRepository
+    public interface IVideoRepository
     {
-        Video GetVideo(string videoId);
-        IEnumerable<Video> GetAll();
-        IEnumerable<Video> Query(Expression<Func<Video, bool>> predicate);
-        string Save(Video document);
-        bool Delete(Video document);
+        Task<Video> GetVideo(string videoId);
+        Task<IEnumerable<Video>> GetAll();
+        Task<IEnumerable<Video>> Query(Func<Video, bool> predicate);
+        Task<bool> Save(Video document);
+        Task<bool> Delete(Video document);
     }
 }

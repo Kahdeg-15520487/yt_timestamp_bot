@@ -1,4 +1,5 @@
 ﻿using discordbot.DAL.Entities;
+using discordbot.DAL.Infrastructure.Interfaces;
 using discordbot.DAL.Interfaces;
 
 using LiteDB;
@@ -8,15 +9,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace discordbot.DAL.Implementations
 {
-    class VideoRepository : IVideoRepository
+    public class VideoRepository : IVideoRepository
     {
-        private readonly ILiteDatabase db;
-        public VideoRepository(LiteDBContextFactory dbFactory)
+        private readonly IDbContext db;
+        public VideoRepository(IDbContext db)
         {
-            this.db = dbFactory.GetDatabase();
+            this.db = db;
         }
 
         ~VideoRepository()
@@ -24,46 +26,29 @@ namespace discordbot.DAL.Implementations
             this.db.Dispose();
         }
 
-        public IEnumerable<Video> GetAll()
+        public async Task<IEnumerable<Video>> GetAll()
         {
-            ILiteCollection<Video> collection = db.GetCollection<Video>();
-            return collection.FindAll();
+            return await db.GetAll<Video>();
         }
 
-        public Video GetVideo(string videoId)
+        public async Task<Video> GetVideo(string videoId)
         {
-            return db.GetCollection<Video>().FindById(new BsonValue(videoId));
+            return await db.Get<Video>(videoId);
         }
 
-        public string Save(Video document)
+        public async Task<IEnumerable<Video>> Query(Func<Video, bool> predicate)
         {
-            ILiteCollection<Video> collection = db.GetCollection<Video>();
-            string result = null;
-
-            if (!collection.Exists(x => x.VideoId == document.VideoId))
-            {
-                result = collection.Insert(document);
-            }
-            else
-            {
-                if (!collection.Update(document))
-                {
-                    return null;
-                }
-                result = document.VideoId;
-
-            }
-            return result;
+            throw new NotImplementedException();
         }
 
-        public IEnumerable<Video> Query(Expression<Func<Video, bool>> predicate)
+        public async Task<bool> Save(Video document)
         {
-            return db.GetCollection<Video>().Find(predicate);
+            return await db.Set<Video>(document);
         }
 
-        public bool Delete(Video document)
+        public async Task<bool> Delete(Video document)
         {
-            return db.GetCollection<Video>().Delete(new BsonValue(document.VideoId));
+            throw new NotImplementedException();
         }
     }
 }

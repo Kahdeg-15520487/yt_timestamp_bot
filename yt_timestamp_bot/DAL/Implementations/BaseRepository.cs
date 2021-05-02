@@ -1,4 +1,5 @@
 ﻿using discordbot.DAL.Entities;
+using discordbot.DAL.Infrastructure.Interfaces;
 using discordbot.DAL.Interfaces;
 
 using LiteDB;
@@ -8,16 +9,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace discordbot.DAL.Implementations
 {
-    class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
+    class BaseRepository<T> : IBaseRepository<T> where T : TValue
     {
-        protected readonly ILiteDatabase db;
+        protected readonly IDbContext db;
 
-        public BaseRepository(LiteDBContextFactory dbFactory)
+        public BaseRepository(IDbContext db)
         {
-            this.db = dbFactory.GetDatabase();
+            this.db = db;
         }
 
         ~BaseRepository()
@@ -25,50 +27,29 @@ namespace discordbot.DAL.Implementations
             this.db.Dispose();
         }
 
-        public virtual IEnumerable<T> GetAll()
+        public virtual async Task<IEnumerable<T>> GetAll()
         {
-            ILiteCollection<T> collection = db.GetCollection<T>();
-            return collection.FindAll().ToList();
+            return await db.GetAll<T>();
         }
 
-        public virtual T Get(ObjectId id)
+        public virtual async Task<T> Get(string id)
         {
-            ILiteCollection<T> collection = db.GetCollection<T>();
-            T get = collection.FindOne(x => x.Id == id);
-            return get;
+            return await db.Get<T>(id);
         }
 
-        public virtual IEnumerable<T> Query(Expression<Func<T, bool>> predicate)
+        public virtual async Task<IEnumerable<T>> Query(Func<T, bool> predicate)
         {
-            return this.GetAll().AsQueryable().Where(predicate);
+            return (await this.GetAll()).Where(predicate);
         }
 
-        public virtual ObjectId Save(T document)
+        public virtual async Task<bool> Save(T document)
         {
-            if (!db.BeginTrans())
-            {
-                throw new Exception("Already in a transaction");
-            }
-            ILiteCollection<T> collection = db.GetCollection<T>();
-            ObjectId result = null;
-
-            if (!collection.Exists(x => x.Id == document.Id))
-            {
-                result = collection.Insert(document);
-            }
-            else
-            {
-                collection.Update(document);
-                result = document.Id;
-            }
-            db.Commit();
-            return result;
+            return await db.Set<T>(document);
         }
 
-        public virtual void Delete(T document)
+        public virtual async Task<bool> Delete(T document)
         {
-            ILiteCollection<T> collection = db.GetCollection<T>();
-            collection.DeleteMany(x => x.Id == document.Id);
+            return await db.Delete(document);
         }
     }
 }

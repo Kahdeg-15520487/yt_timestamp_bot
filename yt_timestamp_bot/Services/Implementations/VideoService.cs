@@ -37,7 +37,7 @@ namespace discordbot.Services.Implementations
             using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
                 ITimeStampRepository tsDb = scope.ServiceProvider.GetRequiredService<ITimeStampRepository>();
-                IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId))
+                IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId)).Result
                            .OrderBy(ts => ts.Time)
                            .Select(ts => new TimeStampDto(ts));
 
@@ -50,7 +50,7 @@ namespace discordbot.Services.Implementations
             using (IServiceScope scope = serviceScopeFactory.CreateScope())
             {
                 IVideoRepository videoDb = scope.ServiceProvider.GetRequiredService<IVideoRepository>();
-                Video entity = videoDb.Query(vd => vd.VideoId.Equals(videoId)).FirstOrDefault();
+                Video entity = videoDb.Query(vd => vd.VideoId.Equals(videoId)).Result.FirstOrDefault();
                 if (entity == null)
                 {
                     return null;
@@ -69,7 +69,7 @@ namespace discordbot.Services.Implementations
                 YoutubeInterface ytInterface = scope.ServiceProvider.GetRequiredService<YoutubeInterface>();
                 YouTubeService ytService = ytInterface.GetYoutubeService();
 
-                List<VideoDto> query = videoDb.GetAll().OrderBy(vd => vd.StartTime).Select(vd => new VideoDto(vd)).ToList();
+                List<VideoDto> query = videoDb.GetAll().Result.OrderBy(vd => vd.StartTime).Select(vd => new VideoDto(vd)).ToList();
 
                 //foreach (Video v in videoDb.GetAll())
                 //{
@@ -87,7 +87,7 @@ namespace discordbot.Services.Implementations
                 ITimeStampRepository tsDb = scope.ServiceProvider.GetRequiredService<ITimeStampRepository>();
                 return query.Select(vdto =>
                 {
-                    vdto.TimeStamps = tsDb.Query(ts => ts.VideoId.Equals(vdto.VideoId))
+                    vdto.TimeStamps = tsDb.Query(ts => ts.VideoId.Equals(vdto.VideoId)).Result
                                           .OrderBy(ts => ts.Time)
                                           .Select(ts => new TimeStampDto(ts));
                     return vdto;
