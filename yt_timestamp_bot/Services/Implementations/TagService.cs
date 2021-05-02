@@ -123,7 +123,7 @@ namespace discordbot.Services.Implementations
         {
             if (currentLiveStream != null)
             {
-                TimeStamp timestamp = tsDb.Query(ts => ts.TagContent.Equals(tag)).FirstOrDefault();
+                TimeStamp timestamp = tsDb.Query(ts => ts.TagContent.Equals(tag)).Result.FirstOrDefault();
                 return new TimeStampDto(timestamp);
             }
             return null;
@@ -133,7 +133,7 @@ namespace discordbot.Services.Implementations
         {
             videoId = videoId == null ? currentLiveStream.VideoId : ytInterface.GetVideoId(videoId).Result;
 
-            IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId))
+            IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId)).Result
                            .OrderBy(ts => ts.Time)
                            .Select(ts => new TimeStampDto(ts));
 
@@ -144,7 +144,7 @@ namespace discordbot.Services.Implementations
         {
             videoId = videoId == null ? currentLiveStream.VideoId : ytInterface.GetVideoId(videoId).Result;
 
-            IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId) && ts.UserId == userId)
+            IEnumerable<TimeStampDto> query = tsDb.Query(ts => ts.VideoId.Equals(videoId) && ts.UserId == userId).Result
                            .OrderBy(ts => ts.Time)
                            .Select(ts => new TimeStampDto(ts));
             return query.ToList();
@@ -155,8 +155,7 @@ namespace discordbot.Services.Implementations
             if (currentLiveStream != null)
             {
                 TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, second, userId, userName, messageId);
-                ObjectId id = tsDb.Save(ts);
-                ts.Id = id;
+                tsDb.Save(ts).Wait();
                 return new TimeStampDto(ts);
             }
             return null;
@@ -167,8 +166,7 @@ namespace discordbot.Services.Implementations
             if (currentLiveStream != null)
             {
                 TimeStamp ts = new TimeStamp(tagContent, currentLiveStream.VideoId, currentLiveStream.StartTime, actualTime, userId, userName, messageId);
-                ObjectId id = tsDb.Save(ts);
-                ts.Id = id;
+                tsDb.Save(ts).Wait();
                 return new TimeStampDto(ts);
             }
             return null;
@@ -183,7 +181,7 @@ namespace discordbot.Services.Implementations
         {
             if (currentLiveStream != null)
             {
-                TimeStamp timeStamp = tsDb.Query(ts => ts.UserId == userId && ts.MessageId == messageId && ts.VideoId == currentLiveStream.VideoId)
+                TimeStamp timeStamp = tsDb.Query(ts => ts.UserId == userId && ts.MessageId == messageId && ts.VideoId == currentLiveStream.VideoId).Result
                               .OrderByDescending(ts => ts.LastModified)
                               .FirstOrDefault();
                 TimeStampDto oldtag = new TimeStampDto(timeStamp);
@@ -204,7 +202,7 @@ namespace discordbot.Services.Implementations
         {
             if (currentLiveStream != null)
             {
-                TimeStamp timeStamp = tsDb.Query(ts => ts.UserId == userId && ts.VideoId == currentLiveStream.VideoId)
+                TimeStamp timeStamp = tsDb.Query(ts => ts.UserId == userId && ts.VideoId == currentLiveStream.VideoId).Result
                               .OrderByDescending(ts => ts.LastModified)
                               .FirstOrDefault();
                 TimeStampDto oldtag = new TimeStampDto(timeStamp);
@@ -224,9 +222,9 @@ namespace discordbot.Services.Implementations
         public bool ShiftTag(int x, string videoId = null)
         {
             List<TimeStamp> timeStamps = (videoId == null ?
-                tsDb.Query(ts => ts.VideoId.Equals(currentLiveStream.VideoId))
+                tsDb.Query(ts => ts.VideoId.Equals(currentLiveStream.VideoId)).Result
                 :
-                tsDb.Query(ts => ts.VideoId.Equals(videoId))
+                tsDb.Query(ts => ts.VideoId.Equals(videoId)).Result
                 ).ToList();
 
             if (timeStamps.Count == 0)

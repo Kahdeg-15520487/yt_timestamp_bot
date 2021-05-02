@@ -1,13 +1,13 @@
-﻿using discordbot.Services.DTOs;
+﻿using discordbot.DAL.Infrastructure.Interfaces;
+using discordbot.Services.DTOs;
+
+using Newtonsoft.Json;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace discordbot.DAL.Entities
 {
-    class Video
+    public class Video : TValue
     {
         public Video() { }
         public Video(VideoDto video)
@@ -18,6 +18,13 @@ namespace discordbot.DAL.Entities
             this.StartTime = video.StartTime;
             this.EndTime = video.EndTime;
         }
+
+        [JsonIgnore]
+        public string Key => VideoId;
+
+        [JsonIgnore]
+        public object Value => this;
+
         public string VideoId { get; set; }
         public string VideoTitle { get; set; }
         public string Misc { get; set; }
