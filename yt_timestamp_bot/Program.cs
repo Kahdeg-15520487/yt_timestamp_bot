@@ -33,13 +33,13 @@ namespace discordbot
      * yt_ts_APIKEY
      * yt_ts_PREFIX
      * yt_ts_LOG
-     * yt_ts_DBTYPE
+     * yt_ts_AUTOGRAB
      */
 
     class Program
     {
         public static readonly string APPLICATION_NAME = "yt_ts";
-        public static readonly string VERSION = "0.6.0";
+        public static readonly string VERSION = "0.7.0";
 
         public static void Main(string[] args)
         {
@@ -116,8 +116,11 @@ namespace discordbot
             services.AddTransient<YoutubeInterface>();
 
             services.AddSingleton(typeof(IBackgroundTaskQueue<>), typeof(BackgroundTaskQueue<>))
-                    .AddHostedService<DiscordHandlerHostedService>()
-                    .AddHostedService<KonluluStreamGrabHostedService>();
+                    .AddHostedService<DiscordHandlerHostedService>();
+            if (bool.TryParse(configuration["_AUTOGRAB"], out bool isAutoGrab) && isAutoGrab)
+            {
+                services.AddHostedService<KonluluStreamGrabHostedService>();
+            }
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Loaded service: ");
